@@ -38,7 +38,6 @@ public class App extends Application implements StateChangeListener {
     Text txtGameData;
     GameModel gameModel;
     EngineOutputView engineOutputView;
-    EngineController engineController;
 
     ToggleButton tglEngineOnOff;
 
@@ -367,10 +366,18 @@ public class App extends Application implements StateChangeListener {
         btnMoveEnd.setOnAction(event -> moveView.seekToEnd());
 
         // connect mode controller
+        // Find the name of the active engine.
         engineOutputView = new EngineOutputView(txtEngineOut);
+
+        // This will set the name of the restored active engine in the
+        // engineOutputView. Previously it was always "Stockfish (internal) at
+        // at startup.
+        String activeEngineID = gameModel.getActiveEngine().getName();
+        if (gameModel.getActiveEngine().isInternal())
+            activeEngineID = "Stockfish (internal)";
+        engineOutputView.setEngineId(activeEngineID);
         modeMenuController = new ModeMenuController(gameModel, engineOutputView);
-        engineController = new EngineController(modeMenuController);
-        modeMenuController.setEngineController(engineController);
+        // Creation of EngineController has been moved inside ModeMenuController.
 
         EditMenuController editMenuController = new EditMenuController(gameModel);
 
@@ -465,9 +472,8 @@ public class App extends Application implements StateChangeListener {
             int multiPv = cmbMultiPV.getValue();
             if(multiPv != gameModel.getMultiPv()) {
                 gameModel.setMultiPv(multiPv);
-                if(gameModel.activeEngine.supportsMultiPV()) {
-                    engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
-                }
+                // triggerStateChange() will send the new value to the engine,
+                // if it's supported and if the engine is on.
                 gameModel.triggerStateChange();
             }
         });
@@ -933,7 +939,7 @@ public class App extends Application implements StateChangeListener {
         gameModel.saveToolbarVisibility(tbMainWindow.isVisible());
         gameModel.saveTheme();
 
-        engineController.sendCommand("quit");
+        modeMenuController.stopEngine();
         ArrayList<Task> runningTasks = gameModel.getPgnDatabase().getRunningTasks();
         for (Task task : runningTasks) {
             task.cancel();

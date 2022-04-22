@@ -34,12 +34,15 @@ public class ModeMenuController implements StateChangeListener {
 
     final GameModel gameModel;
     final EngineOutputView engineOutputView;
-    EngineController engineController;
+    private final EngineController engineController;
+    private int previousMultiPv;
 
     public ModeMenuController(GameModel gameModel, EngineOutputView engineOutputView) {
 
         this.gameModel = gameModel;
+        engineController = new EngineController(this);
         this.engineOutputView = engineOutputView;
+        previousMultiPv = gameModel.getMultiPv();
     }
 
     public void handleEngineInfo(String s) {
@@ -59,37 +62,15 @@ public class ModeMenuController implements StateChangeListener {
         }
     }
 
-    public void setEngineController(EngineController engineController) {
-        this.engineController = engineController;
-    }
-
     public void activateAnalysisMode() {
-
-        // first change gamestate and reset engine
-        if(gameModel.activeEngine.supportsUciLimitStrength()) {
-            gameModel.activeEngine.setUciLimitStrength(false);
-        }
-        engineController.sendCommand("stop");
-        engineController.sendCommand("quit");
-        String cmdEngine = gameModel.activeEngine.getPath();
-        engineController.sendCommand("start "+cmdEngine);
-        engineController.sendCommand("uci");
-        engineController.sendCommand("ucinewgame");
-        for(EngineOption enOpt : gameModel.activeEngine.options) {
-            if(enOpt.isNotDefault()) {
-                engineController.sendCommand(enOpt.toUciCommand());
-            }
-        }
-        if(gameModel.activeEngine.supportsMultiPV()) {
-            engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
-        }
+        engineController.restartEngine(gameModel.activeEngine);
+        engineController.setMultiPV(gameModel.getMultiPv());
         gameModel.setMode(GameModel.MODE_ANALYSIS);
         gameModel.triggerStateChange();
     }
 
     public void activateEnterMovesMode() {
-        engineController.sendCommand("stop");
-        engineController.sendCommand("quit");
+        engineController.stopEngine();
         gameModel.setMode(GameModel.MODE_ENTER_MOVES);
         gameModel.triggerStateChange();
     }
@@ -97,10 +78,8 @@ public class ModeMenuController implements StateChangeListener {
     private void handleStateChangeAnalysis() {
 
         String fen = gameModel.getGame().getCurrentNode().getBoard().fen();
-        engineController.sendCommand("stop");
-        engineController.sendCommand("position fen "+fen);
-        engineController.sendCommand("go infinite");
-
+        engineController.sendNewPosition(fen);
+        engineController.uciGoInfinite();
     }
 
     private void handleStateChangeGameAnalysis() {
@@ -123,10 +102,8 @@ public class ModeMenuController implements StateChangeListener {
                     gameModel.getGame().goToParent();
                 }
                 String fen = gameModel.getGame().getCurrentNode().getBoard().fen();
-                engineController.sendCommand("stop");
-                engineController.sendCommand("position fen " + fen);
-                //System.out.println("go movetime "  + (gameModel.getGameAnalysisThinkTimeSecs() * 1000));
-                engineController.sendCommand("go movetime " + (gameModel.getGameAnalysisThinkTimeSecs() * 1000));
+                engineController.sendNewPosition(fen);
+                engineController.uciGoMoveTime(gameModel.getGameAnalysisThinkTimeSecs() * 1000);
             }
         } else {
             continueAnalysis = false;
@@ -155,26 +132,12 @@ public class ModeMenuController implements StateChangeListener {
     }
 
     public void activatePlayWhiteMode() {
-        // first change gamestate and reset engine
         if(gameModel.activeEngine.supportsUciLimitStrength()) {
             gameModel.activeEngine.setUciLimitStrength(true);
         }
-        engineController.sendCommand("stop");
-        engineController.sendCommand("quit");
-        String cmdEngine = gameModel.activeEngine.getPath();
-        engineController.sendCommand("start "+cmdEngine);
-        engineController.sendCommand("uci");
-        engineController.sendCommand("ucinewgame");
-        for(EngineOption enOpt : gameModel.activeEngine.options) {
-            if(enOpt.isNotDefault()) {
-                engineController.sendCommand(enOpt.toUciCommand());
-            }
-        }
-        if(gameModel.activeEngine.isInternal()) {
-            //System.out.println("setoption name Skill Level value "+gameModel.getEngineStrength());
-            engineController.sendCommand("setoption name Skill Level value "+gameModel.getEngineStrength());
-        }
-        // trigger statechange
+        // restart engine and change gamestate.
+        engineController.restartEngine(gameModel.activeEngine);
+        engineController.setSkillLevelInternal(gameModel.getEngineStrength());
         gameModel.setMode(GameModel.MODE_PLAY_WHITE);
         gameModel.setFlipBoard(false);
         gameModel.setHumanPlayerColor(CONSTANTS.WHITE);
@@ -186,21 +149,9 @@ public class ModeMenuController implements StateChangeListener {
         if(gameModel.activeEngine.supportsUciLimitStrength()) {
             gameModel.activeEngine.setUciLimitStrength(true);
         }
-        engineController.sendCommand("stop");
-        engineController.sendCommand("quit");
-        String cmdEngine = gameModel.activeEngine.getPath();
-        engineController.sendCommand("start "+cmdEngine);
-        engineController.sendCommand("uci");
-        engineController.sendCommand("ucinewgame");
-        for(EngineOption enOpt : gameModel.activeEngine.options) {
-            if(enOpt.isNotDefault()) {
-                engineController.sendCommand(enOpt.toUciCommand());
-            }
-        }
-        if(gameModel.activeEngine.isInternal()) {
-            engineController.sendCommand("setoption name Skill Level value "+gameModel.getEngineStrength());
-        }
-        // trigger statechange
+        // restart engine and change gamestate.
+        engineController.restartEngine(gameModel.activeEngine);
+        engineController.setSkillLevelInternal(gameModel.getEngineStrength());
         gameModel.setMode(GameModel.MODE_PLAY_BLACK);
         gameModel.setFlipBoard(true);
         gameModel.setHumanPlayerColor(CONSTANTS.BLACK);
@@ -212,18 +163,7 @@ public class ModeMenuController implements StateChangeListener {
         if(gameModel.activeEngine.supportsUciLimitStrength()) {
             gameModel.activeEngine.setUciLimitStrength(false);
         }
-        engineController.sendCommand("stop");
-        engineController.sendCommand("quit");
-        String cmdEngine = gameModel.activeEngine.getPath();
-        engineController.sendCommand("start "+cmdEngine);
-        engineController.sendCommand("uci");
-        engineController.sendCommand("ucinewgame");
-        for(EngineOption enOpt : gameModel.activeEngine.options) {
-            if(enOpt.isNotDefault()) {
-                engineController.sendCommand(enOpt.toUciCommand());
-            }
-        }
-        // trigger statechange
+        engineController.restartEngine(gameModel.activeEngine);
         gameModel.setMode(GameModel.MODE_PLAYOUT_POSITION);
         gameModel.setFlipBoard(false);
         gameModel.triggerStateChange();
@@ -239,20 +179,8 @@ public class ModeMenuController implements StateChangeListener {
         if(gameModel.activeEngine.supportsUciLimitStrength()) {
             gameModel.activeEngine.setUciLimitStrength(false);
         }
-        engineController.sendCommand("stop");
-        engineController.sendCommand("quit");
-        String cmdEngine = gameModel.activeEngine.getPath();
-        engineController.sendCommand("start "+cmdEngine);
-        engineController.sendCommand("uci");
-        engineController.sendCommand("ucinewgame");
-        if(gameModel.activeEngine.supportsMultiPV()) {
-            engineController.sendCommand("setoption name MultiPV value 1");
-        }
-        for(EngineOption enOpt : gameModel.activeEngine.options) {
-            if(enOpt.isNotDefault()) {
-                engineController.sendCommand(enOpt.toUciCommand());
-            }
-        }
+        engineController.restartEngine(gameModel.activeEngine);
+        engineController.setMultiPV(1);
         gameModel.setFlipBoard(false);
         gameModel.getGame().goToRoot();
         gameModel.getGame().goToLeaf();
@@ -301,9 +229,8 @@ public class ModeMenuController implements StateChangeListener {
             handleBestMove("BESTMOVE|"+bookMove+"|"+zobrist);
         } else {
             String fen = gameModel.getGame().getCurrentNode().getBoard().fen();
-            engineController.sendCommand("stop");
-            engineController.sendCommand("position fen "+fen);
-            engineController.sendCommand("go movetime "+(gameModel.getComputerThinkTimeSecs()*1000));
+            engineController.sendNewPosition(fen);
+            engineController.uciGoMoveTime(gameModel.getComputerThinkTimeSecs()*1000);
         }
 
         /*
@@ -325,9 +252,8 @@ public class ModeMenuController implements StateChangeListener {
     public void handleStateChangePlayoutPosition() {
 
         String fen = gameModel.getGame().getCurrentNode().getBoard().fen();
-        engineController.sendCommand("stop");
-        engineController.sendCommand("position fen "+fen);
-        engineController.sendCommand("go movetime "+(gameModel.getComputerThinkTimeSecs()*1000));
+        engineController.sendNewPosition(fen);
+        engineController.uciGoMoveTime(gameModel.getComputerThinkTimeSecs()*1000);
     }
 
     private void addBestPv(String[] uciMoves) {
@@ -364,8 +290,10 @@ public class ModeMenuController implements StateChangeListener {
 
 
     public void editEngines() {
-        gameModel.setMode(GameModel.MODE_ENTER_MOVES);
-        gameModel.triggerStateChange();
+        // The following call stops the engine-process, set the ENTER_MOVES_MODE
+        // and calls GameModel.triggerChangeState(). Previously the engine was
+        // not stopped here.
+        activateEnterMovesMode();
         DialogEngines dlg = new DialogEngines();
         ArrayList<Engine> enginesCopy = new ArrayList<>();
         for(Engine engine : gameModel.engines) {
@@ -377,11 +305,14 @@ public class ModeMenuController implements StateChangeListener {
         }
         boolean accepted = dlg.show(enginesCopy, selectedIdx, gameModel.THEME);
         if(accepted) {
-            //List<Engine> engineList = dlg.engineList
             ArrayList<Engine> engineList = new ArrayList<>(dlg.engineList);
             Engine selectedEngine = dlg.engineList.get(dlg.selectedIndex);
+            // Change the engine-name in the bottom panel immediately on OK
+            // being pressed. Previously it didn't change until we started
+            // playing.
+            engineOutputView.setEngineId(selectedEngine.getName());
             gameModel.engines = engineList;
-            gameModel.activeEngine = selectedEngine;
+            gameModel.activeEngine = selectedEngine; 
             gameModel.triggerStateChange();
         }
     }
@@ -602,6 +533,11 @@ public class ModeMenuController implements StateChangeListener {
 
         boolean abort = false;
 
+        if(gameModel.getMultiPv() != previousMultiPv) {
+            engineController.setMultiPV(gameModel.getMultiPv());
+            previousMultiPv = gameModel.getMultiPv();
+        }
+
         // if we change from e.g. play white to enter moves, the state change would trigger
         // the notification again in enter moves mode after the state change. thus,
         // also check if
@@ -666,6 +602,12 @@ public class ModeMenuController implements StateChangeListener {
                 handleStateChangePlayWhiteOrBlack();
             }
         }
+    }
+
+    // Just a wrapper method, so I could remove Enginecontroller
+    // completely from App.java.
+    public void stopEngine() {
+        engineController.stopEngine();
     }
 
 }

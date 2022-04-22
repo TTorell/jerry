@@ -29,17 +29,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class EngineController {
 
-    EngineThread engineThread;
-    final BlockingQueue<String> cmdQueue = new LinkedBlockingQueue<String>();;
-    ModeMenuController mmc = null;
-
+    final EngineThread engineThread;
+    final BlockingQueue<String> cmdQueue = new LinkedBlockingQueue<String>();
+    Engine currentEngine;
+    
     public EngineController(ModeMenuController modeMenuController) {
-
-        mmc = modeMenuController;
-
-    }
-
-    private void startEngineThread() {
 
         final AtomicReference<String> count = new AtomicReference<>();
         //cmdQueue = new LinkedBlockingQueue<String>();
@@ -52,8 +46,9 @@ public class EngineController {
                     Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
+                            //System.out.println("EngineController run later method.");
                             String value = count.getAndSet(null);
-                            mmc.handleEngineInfo(value);
+                             modeMenuController.handleEngineInfo(value);
                         }
                     });
                 }
@@ -80,47 +75,89 @@ public class EngineController {
 
     public void sendCommand(String cmd) {
         try {
-            if(cmd.startsWith("quit")) {
-                cmdQueue.put(cmd);
-                if(engineThread != null) {
-                    Thread.sleep(100);
-                    engineThread.terminate();
-                    engineThread.join();
-                    engineThread = null;
-                }
-            } else {
-                if(cmd.startsWith("start ")) {
-                    //System.out.println("start received, restarting engine");
-                    if(engineThread == null) {
-                        //System.out.println("engine thread was null, restarting");
-                        startEngineThread();
-                        Thread.sleep(100);
-                        cmdQueue.put(cmd);
-                    }
-                } else {
-                    cmdQueue.put(cmd);
-                }
-            }
+            cmdQueue.put(cmd);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void stopEngine() {
+        sendCommand("stop");
+        sendCommand("quit");
+        do {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } while (engineThread.engineIsOn());
+    }
+
+    public void restartEngine(Engine activeEngine) {
+        // It's OK to send stop and quit even if the engine process
+        // inside the engine thread is not running. These commands will
+        // just be consumed by the engine thread in that case.
+        stopEngine();
+        // Restart engine.
+        sendCommand("start " + activeEngine.getPath());
+        do {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } while (!engineThread.engineIsOn());
+
+        // Since the engine is either internal, or we have
+        // been able to set up the engine in the
+        // Mode->Engines... dialog, we know it's a UCI-engine.
+        // But since some engines won't accept commands prior
+        // to uci, so:
+        sendCommand("uci");
+        // Here the engine thread will wait for uciok from engine,
+        // which is according to the UCI-protocol, but meanwhile we
+        // continue with pumping setoption commands into the cmdQueue.
+        for(EngineOption enOpt : activeEngine.options) {
+            if(enOpt.isNotDefault()) {
+                sendCommand(enOpt.toUciCommand());
+            }
+        }
+        // The engine thread requires an isready
+        // before any other commands can be sent,
+        // except for uci, setoption and quit.
+        sendCommand("isready");
+        sendCommand("ucinewgame");
+        // An isready should be sent after ucinewgame.
+        sendCommand("isready");
     }
 
     public void setStockfishStrength(int level) {
-        try {
-            cmdQueue.put("setoption name Skill Level value "+level);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        sendCommand("setoption name Skill Level value "+level);
+    }
+
+    public void setSkillLevelInternal(int engineStrength) {
+        if(currentEngine != null && currentEngine.isInternal()) {
+            sendCommand("setoption name Skill Level value " + engineStrength);
         }
+    }
+
+    public void setMultiPV(int n) {
+        if(currentEngine != null && currentEngine.supportsMultiPV()) {
+            sendCommand("setoption name MultiPV value " + n);
+        }
+    }
+
+    public void sendNewPosition(String fen) {
+        sendCommand("stop");
+        sendCommand("position fen " + fen);
     }
 
     public void uciGoMoveTime(int milliseconds) {
-        try {
-            cmdQueue.put("go movetime "+milliseconds);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        sendCommand("go movetime "+ milliseconds);
     }
 
+    public void uciGoInfinite() {
+        sendCommand("go infinite");
+    }
 
 }

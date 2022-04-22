@@ -122,4 +122,10 @@ public class EngineOutputView {
             }
         }
     }
+
+    public void setEngineId(String engineId) {
+        this.engineId.setText(engineId);
+    }
+    
+
 }

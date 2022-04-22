@@ -33,7 +33,7 @@ public class EngineInfo {
 
     static final int MAX_PV = 4;
 
-    final Pattern READYOK        = Pattern.compile("readok");
+    final Pattern READYOK        = Pattern.compile("readyok");
     final Pattern SCORECP        = Pattern.compile("score\\scp\\s-{0,1}(\\d)+");
     final Pattern NPS            = Pattern.compile("nps\\s(\\d)+");
     final Pattern SELDEPTH       = Pattern.compile("seldepth\\s(\\d)+");
