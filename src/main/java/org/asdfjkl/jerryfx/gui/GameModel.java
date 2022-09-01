@@ -511,6 +511,10 @@ public class GameModel {
             }
         }
     }
+    
+    public Engine getActiveEngine() {
+        return activeEngine;
+    }
 }
 
 
