@@ -32,6 +32,7 @@ import java.util.ArrayList;
 
 /**
  * JavaFX App
+ *
  */
 public class App extends Application implements StateChangeListener {
 
