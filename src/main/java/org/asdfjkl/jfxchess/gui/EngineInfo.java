@@ -31,13 +31,9 @@ import java.util.regex.Pattern;
 
 public class EngineInfo {
 
-// <<<<<<< HEAD:src/main/java/org/asdfjkl/jerryfx/gui/EngineInfo.java
-//     static final int MAX_PV = 4;
-
-    final Pattern READYOK        = Pattern.compile("readyok");
-// =======
+    
+    // readok? I removed this unused pattern.
     //final Pattern READYOK        = Pattern.compile("readok");
-// >>>>>>> master:src/main/java/org/asdfjkl/jfxchess/gui/EngineInfo.java
     final Pattern SCORECP        = Pattern.compile("score\\scp\\s-{0,1}(\\d)+");
     final Pattern NPS            = Pattern.compile("nps\\s(\\d)+");
     final Pattern SELDEPTH       = Pattern.compile("seldepth\\s(\\d)+");
