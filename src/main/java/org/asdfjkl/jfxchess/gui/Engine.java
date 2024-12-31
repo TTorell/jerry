@@ -174,6 +174,7 @@ public class Engine {
     public void setElo(int elo) {
         for (EngineOption option : options) {
             if (option.name.equals("UCI_Elo")) {
+                System.out.println("Setting UCI_Elo spinValue to " + elo);
                 option.spinValue = elo;
             }
         }
@@ -198,6 +199,7 @@ public class Engine {
     public void setUciLimitStrength(boolean val) {
         for (EngineOption option : options) {
             if (option.name.equals("UCI_LimitStrength")) {
+                System.out.println("Setting UCI_LimitStrength to " + val);
                 option.checkStatusValue = val;
             }
         }

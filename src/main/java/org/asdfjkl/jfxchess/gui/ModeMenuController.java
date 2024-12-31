@@ -607,10 +607,13 @@ public class ModeMenuController implements StateChangeListener {
         }
     }
 
-    // Just a wrapper method, so I could remove Enginecontroller
+    // Just a few wrapper-methods, so I could remove Enginecontroller
     // completely from App.java.
     public void stopEngine() {
         engineController.stopEngine();
     }
-
+    
+    public void engineSetOptionMultiPV(int value) {
+        engineController.sendCommand("setoption name MultiPV value " + value);     
+    }
 }

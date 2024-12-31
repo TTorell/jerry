@@ -367,22 +367,17 @@ public class App extends Application implements StateChangeListener {
         gameModel.addListener(this);
 
         // connect mode controller
-// <<<<<<< HEAD:src/main/java/org/asdfjkl/jerryfx/gui/App.java
-//         // Find the name of the active engine.
-//         engineOutputView = new EngineOutputView(txtEngineOut);
 
-//         // This will set the name of the restored active engine in the
-//         // engineOutputView. Previously it was always "Stockfish (internal) at
-//         // at startup.
-//         String activeEngineID = gameModel.getActiveEngine().getName();
-//         if (gameModel.getActiveEngine().isInternal())
-//             activeEngineID = "Stockfish (internal)";
-//         engineOutputView.setEngineId(activeEngineID);
-// =======
         engineOutputView = new EngineOutputView(gameModel, txtEngineOut);
-//>>>>>>> master:src/main/java/org/asdfjkl/jfxchess/gui/App.java
+        // This will set the name of the restored active engine in the
+        // engineOutputView. Previously it was always "Stockfish (internal)
+        // at startup.
+        String activeEngineID = gameModel.getActiveEngine().getName();
+        if (gameModel.getActiveEngine().isInternal())
+            activeEngineID = "Stockfish (internal)";
+        engineOutputView.setEngineId(activeEngineID);
         modeMenuController = new ModeMenuController(gameModel, engineOutputView);
-        // Creation of EngineController has been moved inside ModeMenuController.
+        // Creation of engineController has been moved inside ModeMenuController.
 
         gameModel.addListener(engineOutputView);
 
@@ -489,14 +484,16 @@ public class App extends Application implements StateChangeListener {
         btnAddEngineLine.setOnAction(actionEvent -> {
             int currentMultiPv = gameModel.getMultiPv();
             gameModel.setMultiPv(currentMultiPv+1);
-            engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
+            modeMenuController.engineSetOptionMultiPV(gameModel.getMultiPv());
+            // engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
             gameModel.triggerStateChange();
         });
 
         btnRemoveEngineLine.setOnAction(actionEvent -> {
             int currentMultiPv = gameModel.getMultiPv();
             gameModel.setMultiPv(currentMultiPv-1);
-            engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
+            modeMenuController.engineSetOptionMultiPV(gameModel.getMultiPv());
+            // engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
             gameModel.triggerStateChange();
 //>>>>>>> master:src/main/java/org/asdfjkl/jfxchess/gui/App.java
         });
@@ -968,6 +965,8 @@ public class App extends Application implements StateChangeListener {
             gameModel.currentPgnDatabaseIdx = -1;
             gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
             gameModel.activeEngine.setElo(dlg.strength);
+            System.out.println("STRENGTH is " + dlg.strength);
+            System.out.println(gameModel.activeEngine.getUciElo());
             Game g = new Game();
             g.getRootNode().setBoard(new Board(true));
             gameModel.setGame(g);

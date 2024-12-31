@@ -77,6 +77,7 @@ public class DialogNewGame {
         supportsUciLimitStrength = activEngine.supportsUciLimitStrength();
         if(supportsUciLimitStrength) {
             strength = activEngine.getUciElo();
+            System.out.println("DlgNewGame elo: " + strength);
             minElo = activEngine.getMinUciElo();
             maxElo = activEngine.getMaxUciElo();
         }

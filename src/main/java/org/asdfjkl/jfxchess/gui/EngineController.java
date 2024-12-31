@@ -118,6 +118,7 @@ public class EngineController {
         // continue with pumping setoption commands into the cmdQueue.
         for(EngineOption enOpt : activeEngine.options) {
             if(enOpt.isNotDefault()) {
+                System.out.println(enOpt.toUciCommand());
                 sendCommand(enOpt.toUciCommand());
             }
         }
