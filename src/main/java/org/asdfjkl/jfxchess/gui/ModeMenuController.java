@@ -64,6 +64,7 @@ public class ModeMenuController implements StateChangeListener {
 
     public void activateAnalysisMode() {
         engineController.restartEngine(gameModel.activeEngine);
+        engineController.setUciLimitStrength(false);
         engineController.setMultiPV(gameModel.getMultiPv());
         gameModel.setMode(GameModel.MODE_ANALYSIS);
         gameModel.triggerStateChange();
@@ -132,27 +133,9 @@ public class ModeMenuController implements StateChangeListener {
     }
 
     public void activatePlayWhiteMode() {
-        if(gameModel.activeEngine.supportsUciLimitStrength()) {
-            gameModel.activeEngine.setUciLimitStrength(true);
-        }
-// <<<<<<< HEAD:src/main/java/org/asdfjkl/jerryfx/gui/ModeMenuController.java
         // restart engine and change gamestate.
         engineController.restartEngine(gameModel.activeEngine);
-        engineController.setSkillLevelInternal(gameModel.getEngineStrength());
-// =======
-        // engineController.sendCommand("stop");
-        // engineController.sendCommand("quit");
-        // String cmdEngine = gameModel.activeEngine.getPath();
-        // engineController.sendCommand("start "+cmdEngine);
-        // engineController.sendCommand("uci");
-        // engineController.sendCommand("ucinewgame");
-        // for(EngineOption enOpt : gameModel.activeEngine.options) {
-        //     if(enOpt.isNotDefault()) {
-        //         engineController.sendCommand(enOpt.toUciCommand());
-        //     }
-        // }
-        // // trigger statechange
-// >>>>>>> master:src/main/java/org/asdfjkl/jfxchess/gui/ModeMenuController.java
+        engineController.setUciLimitStrength(true);
         gameModel.setMode(GameModel.MODE_PLAY_WHITE);
         gameModel.setFlipBoard(false);
         gameModel.setHumanPlayerColor(CONSTANTS.WHITE);
@@ -160,13 +143,9 @@ public class ModeMenuController implements StateChangeListener {
     }
 
     public void activatePlayBlackMode() {
-        // first change gamestate and reset engine
-        if(gameModel.activeEngine.supportsUciLimitStrength()) {
-            gameModel.activeEngine.setUciLimitStrength(true);
-        }
         // restart engine and change gamestate.
         engineController.restartEngine(gameModel.activeEngine);
-        engineController.setSkillLevelInternal(gameModel.getEngineStrength());
+        engineController.setUciLimitStrength(true);
         gameModel.setMode(GameModel.MODE_PLAY_BLACK);
         gameModel.setFlipBoard(true);
         gameModel.setHumanPlayerColor(CONSTANTS.BLACK);
@@ -175,10 +154,8 @@ public class ModeMenuController implements StateChangeListener {
 
     public void activatePlayoutPositionMode() {
         // first change gamestate and reset engine
-        if(gameModel.activeEngine.supportsUciLimitStrength()) {
-            gameModel.activeEngine.setUciLimitStrength(false);
-        }
         engineController.restartEngine(gameModel.activeEngine);
+        engineController.setUciLimitStrength(false);    
         gameModel.setMode(GameModel.MODE_PLAYOUT_POSITION);
         gameModel.setFlipBoard(false);
         gameModel.triggerStateChange();
@@ -191,10 +168,8 @@ public class ModeMenuController implements StateChangeListener {
         gameModel.getGame().removeAllAnnotations();
         gameModel.getGame().setTreeWasChanged(true);
 
-        if(gameModel.activeEngine.supportsUciLimitStrength()) {
-            gameModel.activeEngine.setUciLimitStrength(false);
-        }
         engineController.restartEngine(gameModel.activeEngine);
+        engineController.setUciLimitStrength(false);
         engineController.setMultiPV(1);
         gameModel.setFlipBoard(false);
         gameModel.getGame().goToRoot();
@@ -614,6 +589,6 @@ public class ModeMenuController implements StateChangeListener {
     }
     
     public void engineSetOptionMultiPV(int value) {
-        engineController.sendCommand("setoption name MultiPV value " + value);     
+        engineController.setMultiPV(value);     
     }
 }

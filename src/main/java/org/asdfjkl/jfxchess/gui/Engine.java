@@ -192,6 +192,7 @@ public class Engine {
                     supportsSetElo = true;
                 }
             }
+            System.out.println("supportsUciLimitStrength(): " + supportsLimitStrength + supportsSetElo);
             return (supportsLimitStrength && supportsSetElo);
 
     }

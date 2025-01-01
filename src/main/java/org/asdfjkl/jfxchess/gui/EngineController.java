@@ -45,9 +45,8 @@ public class EngineController {
                     Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
-                            //System.out.println("EngineController run later method.");
                             String value = count.getAndSet(null);
-                             modeMenuController.handleEngineInfo(value);
+                            modeMenuController.handleEngineInfo(value);
                         }
                     });
                 }
@@ -73,6 +72,7 @@ public class EngineController {
     }
 
     public void sendCommand(String cmd) {
+        System.out.println(cmd);
         try {
             cmdQueue.put(cmd);
         } catch (InterruptedException e) {
@@ -93,6 +93,7 @@ public class EngineController {
     }
 
     public void restartEngine(Engine activeEngine) {
+        currentEngine = activeEngine;
         // It's OK to send stop and quit even if the engine process
         // inside the engine thread is not running. These commands will
         // just be consumed by the engine thread in that case.
@@ -118,7 +119,6 @@ public class EngineController {
         // continue with pumping setoption commands into the cmdQueue.
         for(EngineOption enOpt : activeEngine.options) {
             if(enOpt.isNotDefault()) {
-                System.out.println(enOpt.toUciCommand());
                 sendCommand(enOpt.toUciCommand());
             }
         }
@@ -140,9 +140,15 @@ public class EngineController {
             sendCommand("setoption name Skill Level value " + engineStrength);
         }
     }
+    
+    public void setUciLimitStrength(Boolean val) {
+        if (currentEngine.supportsUciLimitStrength()) {
+            sendCommand("setoption name UCI_LimitStrength value " + val);
+        }
+    }
 
     public void setMultiPV(int n) {
-        if(currentEngine != null && currentEngine.supportsMultiPV()) {
+        if (currentEngine != null && currentEngine.supportsMultiPV()) {
             sendCommand("setoption name MultiPV value " + n);
         }
     }
