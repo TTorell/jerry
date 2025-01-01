@@ -367,7 +367,6 @@ public class App extends Application implements StateChangeListener {
         gameModel.addListener(this);
 
         // connect mode controller
-
         engineOutputView = new EngineOutputView(gameModel, txtEngineOut);
         // This will set the name of the restored active engine in the
         // engineOutputView. Previously it was always "Stockfish (internal)
@@ -470,22 +469,11 @@ public class App extends Application implements StateChangeListener {
             }
         });
 
-// <<<<<<< HEAD:src/main/java/org/asdfjkl/jerryfx/gui/App.java
-//         cmbMultiPV.setOnAction(actionEvent -> {
-//             int multiPv = cmbMultiPV.getValue();
-//             if(multiPv != gameModel.getMultiPv()) {
-//                 gameModel.setMultiPv(multiPv);
-//                 // triggerStateChange() will send the new value to the engine,
-//                 // if it's supported and if the engine is on.
-//                 gameModel.triggerStateChange();
-//             }
-// =======
 
         btnAddEngineLine.setOnAction(actionEvent -> {
             int currentMultiPv = gameModel.getMultiPv();
             gameModel.setMultiPv(currentMultiPv+1);
             modeMenuController.engineSetOptionMultiPV(gameModel.getMultiPv());
-            // engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
             gameModel.triggerStateChange();
         });
 
@@ -493,9 +481,7 @@ public class App extends Application implements StateChangeListener {
             int currentMultiPv = gameModel.getMultiPv();
             gameModel.setMultiPv(currentMultiPv-1);
             modeMenuController.engineSetOptionMultiPV(gameModel.getMultiPv());
-            // engineController.sendCommand("setoption name MultiPV value " + gameModel.getMultiPv());
             gameModel.triggerStateChange();
-//>>>>>>> master:src/main/java/org/asdfjkl/jfxchess/gui/App.java
         });
 
         itmNew.setOnAction(e -> {
@@ -965,8 +951,6 @@ public class App extends Application implements StateChangeListener {
             gameModel.currentPgnDatabaseIdx = -1;
             gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
             gameModel.activeEngine.setElo(dlg.strength);
-            System.out.println("STRENGTH is " + dlg.strength);
-            System.out.println(gameModel.activeEngine.getUciElo());
             Game g = new Game();
             g.getRootNode().setBoard(new Board(true));
             gameModel.setGame(g);

@@ -133,6 +133,7 @@ public class GameModel {
         internalElo.spinDefault = 1320;
         internalElo.spinValue = 3190;
         internalElo.type = EngineOption.EN_OPT_TYPE_SPIN;
+
         EngineOption internalLimitStrength = new EngineOption();
         internalLimitStrength.name = "UCI_LimitStrength";
         internalLimitStrength.type = EngineOption.EN_OPT_TYPE_CHECK;

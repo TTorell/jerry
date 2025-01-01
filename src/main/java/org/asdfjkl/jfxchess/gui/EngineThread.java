@@ -74,7 +74,7 @@ public class EngineThread extends Thread {
     public void run() {
         while (running) {
             // Set the thread to loop at about 1000 times per second.
-        	// It Keeps CPU-load down and is probably more than enough.
+            // It Keeps CPU-load down and is probably more than enough.
         	try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
@@ -342,6 +342,7 @@ public class EngineThread extends Thread {
             }
         }
     }
+
 
     public void terminate() {
         running = false;
