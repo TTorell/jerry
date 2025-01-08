@@ -151,6 +151,7 @@ public class EngineOutputView implements StateChangeListener {
         }
     }
 
+    // Added this to be able to set engineId from App and ModeMenuController
     public void setEngineId(String engineId) {
         this.engineId.setText(engineId);
     }

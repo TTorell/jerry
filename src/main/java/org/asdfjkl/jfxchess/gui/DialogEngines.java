@@ -323,10 +323,10 @@ public class DialogEngines {
                 bro.flush();
                 try {
                     boolean finished = engineProcess.waitFor(500, TimeUnit.MILLISECONDS);
-                    if (!finished) {
+                    if(!finished) {
                         engineProcess.destroy();
                     }
-                } catch (InterruptedException e) {
+                } catch(InterruptedException e) {
                     e.printStackTrace();
                 }
 

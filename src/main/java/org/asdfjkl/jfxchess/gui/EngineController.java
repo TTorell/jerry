@@ -72,7 +72,6 @@ public class EngineController {
     }
 
     public void sendCommand(String cmd) {
-        System.out.println(cmd);
         try {
             cmdQueue.put(cmd);
         } catch (InterruptedException e) {

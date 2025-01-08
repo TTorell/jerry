@@ -77,7 +77,6 @@ public class DialogNewGame {
         supportsUciLimitStrength = activEngine.supportsUciLimitStrength();
         if(supportsUciLimitStrength) {
             strength = activEngine.getUciElo();
-            System.out.println("DlgNewGame elo: " + strength);
             minElo = activEngine.getMinUciElo();
             maxElo = activEngine.getMaxUciElo();
         }
@@ -149,10 +148,16 @@ public class DialogNewGame {
                     txtStrength.setText("Elo "+ strength);
                 })
         );
+        
         sliderStrength.setValue(3000);
         sliderStrength.setValue(tmpStrength);
         sliderStrength.setStyle("-show-value-on-interaction: false;");
         sliderStrength.setDisable(true);
+        
+        if (!supportsUciLimitStrength) {
+            txtStrength.setText("N.A.");
+            txtStrength.setDisable(true);
+        }
 
         sliderThinkTime.setMin(1);
         sliderThinkTime.setMax(7);

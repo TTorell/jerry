@@ -371,10 +371,7 @@ public class App extends Application implements StateChangeListener {
         // This will set the name of the restored active engine in the
         // engineOutputView. Previously it was always "Stockfish (internal)
         // at startup.
-        String activeEngineID = gameModel.getActiveEngine().getName();
-        if (gameModel.getActiveEngine().isInternal())
-            activeEngineID = "Stockfish (internal)";
-        engineOutputView.setEngineId(activeEngineID);
+        engineOutputView.setEngineId(gameModel.getActiveEngineID());
         modeMenuController = new ModeMenuController(gameModel, engineOutputView);
         // Creation of engineController has been moved inside ModeMenuController.
 

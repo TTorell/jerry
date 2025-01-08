@@ -135,7 +135,8 @@ public class ModeMenuController implements StateChangeListener {
     public void activatePlayWhiteMode() {
         // restart engine and change gamestate.
         engineController.restartEngine(gameModel.activeEngine);
-        engineController.setUciLimitStrength(true);
+        if (gameModel.activeEngine.isInternal())
+            engineController.setUciLimitStrength(true);
         gameModel.setMode(GameModel.MODE_PLAY_WHITE);
         gameModel.setFlipBoard(false);
         gameModel.setHumanPlayerColor(CONSTANTS.WHITE);
@@ -145,7 +146,8 @@ public class ModeMenuController implements StateChangeListener {
     public void activatePlayBlackMode() {
         // restart engine and change gamestate.
         engineController.restartEngine(gameModel.activeEngine);
-        engineController.setUciLimitStrength(true);
+        if (gameModel.activeEngine.isInternal())
+            engineController.setUciLimitStrength(true);
         gameModel.setMode(GameModel.MODE_PLAY_BLACK);
         gameModel.setFlipBoard(true);
         gameModel.setHumanPlayerColor(CONSTANTS.BLACK);

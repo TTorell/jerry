@@ -102,7 +102,7 @@ public class EngineThread extends Thread {
                 running = false;
                 continue;
             }
-            // process engine output
+            // Process engine output
             if (engineOutput != null) {
                 int linesRead = 0;
                 try {
@@ -164,7 +164,7 @@ public class EngineThread extends Thread {
                         // if we find a start command.
                         // This makes it OK for the engineController to
                         // always send stop and quit first, when restarting
-                        // a new engine.
+                        // an engine, without first checking if the engine is on. 
                         String cmd = (String)cmdQueue.take();
                         if (cmd.startsWith("start")) {
                             // reset engine info if we start
@@ -314,7 +314,7 @@ public class EngineThread extends Thread {
                     cmd = (String) cmdQueue.take();
                     // if the command is "position fen moves", first count the
                     // numbers of moves so far to generate move numbers in engine info
-                    // todo: needed???
+                    // todo: needed?
                     if(cmd.startsWith("position fen")) {
                         Matcher matchMoves = REG_MOVES.matcher(cmd);
                         int cnt = 0;

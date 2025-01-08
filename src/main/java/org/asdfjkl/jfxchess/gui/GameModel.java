@@ -130,6 +130,8 @@ public class GameModel {
         internalElo.name = "UCI_Elo";
         internalElo.spinMin = 1320;
         internalElo.spinMax = 3190;
+	// Previously 3190 wich surprisingly caused me to
+	// beat stockfish without any problems.
         internalElo.spinDefault = 1320;
         internalElo.spinValue = 3190;
         internalElo.type = EngineOption.EN_OPT_TYPE_SPIN;
@@ -592,10 +594,13 @@ public class GameModel {
             }
         }
     }
-    
-    public Engine getActiveEngine() {
-        return activeEngine;
+
+    // This "wrapper-method" became necessary to be able to
+    // set engineID in engineOutputView from App
+    public String getActiveEngineID() {
+        return activeEngine.getName();
     }
+    
 }
 
 
