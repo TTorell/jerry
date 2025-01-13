@@ -95,10 +95,6 @@ public class DialogEngines {
                     btnEditParameters.setDisable(true);
                     btnResetParameters.setDisable(true);
                     btnRemove.setDisable(true);
-                } else if(selectedIndex == 1) {
-                    btnEditParameters.setDisable(false);
-                    btnResetParameters.setDisable(false);
-                    btnRemove.setDisable(true);
                 } else
                 {
                     btnEditParameters.setDisable(false);
