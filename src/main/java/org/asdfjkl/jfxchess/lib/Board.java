@@ -1650,7 +1650,8 @@ public class Board {
             // is not empty
             // in case of an en-passent capture, the destiation field
             // is empty. But then the destination field is the e.p. square
-            if(this.board[m.to] != CONSTANTS.EMPTY || m.to == this.enPassentTarget) {
+            if(this.board[m.to] != CONSTANTS.EMPTY || 
+                    (m.to == this.enPassentTarget && pieceType == CONSTANTS.PAWN)) {
                 if(pieceType == CONSTANTS.PAWN) {
                     san.append((char) (thisCol + 96));
                 }
