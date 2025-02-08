@@ -70,6 +70,16 @@ public class EngineThread extends Thread {
         return stringProperty;
     }
 
+    private void take_write_and_flush(String cmd) {
+	try {
+	    cmdQueue.take();
+	    engineInput.write(cmd + "\n");
+	    engineInput.flush();
+	} catch (IOException | InterruptedException e) {
+	    e.printStackTrace(System.out);
+	}
+    }
+
     @Override
     public void run() {
         while (running) {
@@ -82,8 +92,9 @@ public class EngineThread extends Thread {
             }
 
             if (this.isInterrupted()) {
+                System.out.println("INTERRUPTED");
                 // here: delete process if it exists
-                if(engineIsOn()) {
+                if (engineIsOn()) {
                     try {
                         // Try to close down the engine the normal way.
                         engineInput.write("stop\n");
@@ -91,7 +102,7 @@ public class EngineThread extends Thread {
                         engineInput.write("quit\n");
                         engineInput.flush();
                         boolean finished = engineProcess.waitFor(500, TimeUnit.MILLISECONDS);
-                        if(!finished) {
+                        if (!finished) {
                             engineProcess.destroy();
                         }
                     } catch(IOException | InterruptedException e) {
@@ -108,11 +119,11 @@ public class EngineThread extends Thread {
                 try {
                     while (engineOutput.ready() && linesRead < 100) {
                         String line = engineOutput.readLine();
-                        if(line.contains("readyok")) {
+                        if (line.contains("readyok")) {
                             readyok = true;
                             continue;
                         }
-                        if(line.contains("uciok")) {
+                        if (line.contains("uciok")) {
                             uciok = true;
                             continue;
                         }
@@ -121,7 +132,7 @@ public class EngineThread extends Thread {
                             //lastString = line;
                             // todo: instead of directly setting bestmove,
                             // try updating engine info
-                            if(line.startsWith("bestmove")) {
+                            if (line.startsWith("bestmove")) {
                                 engineInfo.bestmove = "BESTMOVE|"
                                         + line.substring(9)
                                         +"|"+engineInfo.score.get(0)
@@ -142,7 +153,7 @@ public class EngineThread extends Thread {
             }
             // send update
             long currentMs = System.currentTimeMillis();
-            if((currentMs - lastInfoUpdate) > 100) {
+            if ((currentMs - lastInfoUpdate) > 100) {
                 stringProperty.set("INFO " + engineInfo.toString());
                 lastInfoUpdate = currentMs;
             }
@@ -151,13 +162,13 @@ public class EngineThread extends Thread {
             // the window or other inputs, the GUI might skip to handle (the only one)
             // bestmove info. Instead, the GUI will receive bestmove frequently
             // but ignore the info, if already processed.
-            if((currentMs - lastBestmoveUpdate) > 800) {
+            if ((currentMs - lastBestmoveUpdate) > 800) {
                 stringProperty.set(engineInfo.bestmove);
                 lastBestmoveUpdate = currentMs;
             }
-            if (!engineIsOn()) { 
+            if (!engineIsOn()) {
                 // engine not running
-                if(!cmdQueue.isEmpty()) {
+                if (!cmdQueue.isEmpty()) {
                     try {
                         // Here we dispose of (or consume) the next command
                         // sent to a dead engine, or start a new engine process
@@ -195,12 +206,15 @@ public class EngineThread extends Thread {
             // other commands from the engine controller until isready
             // has been sent at least once and we have received readyok
             // from the engine.
-            if(!cmdQueue.isEmpty()) {
+            if (!cmdQueue.isEmpty()) {
+                // The problem of sending stop first if we are in "go infinite"-mode
+		// is handled in EngineController.
+		
                 // Don't remove from queue until we know which command it is.
                 // It could be some other command just waiting for us to
                 // pass the readyok check below, now or in the next loop, maybe.
                 String cmd = (String) cmdQueue.peek();
-                if(cmd == null) {
+                if (cmd == null) {
                     // What to do here? 
                     // Better luck next loop!
                     continue;
@@ -211,7 +225,7 @@ public class EngineThread extends Thread {
                 // before it answered false. So when restarting, the start
                 // command was being sent to the dead engine as a normal
                 // command below. The following statement prevents that. 
-                if(cmd.startsWith("start")) {
+                if (cmd.startsWith("start")) {
                     continue;
                 }
                 
@@ -220,22 +234,16 @@ public class EngineThread extends Thread {
                 // after startup (like e.g. arasan). thus we require of the
                 // engine controller to always send 'uci' after starting an
                 // engine process by the start command.
-                if(cmd.equals("uci")) {
-                    try {
-                        cmdQueue.take();
-                        engineInput.write(cmd + "\n");
-                        engineInput.flush();
-                        // Set the uciok flag to false.
-                        // This thread won't send any other commands
-                        // until uciok has been received.
-                        uciok = false;
-                    } catch (InterruptedException | IOException e) {
-                        e.printStackTrace(System.out);
-                    }
+                if (cmd.equals("uci")) {
+                    take_write_and_flush(cmd);
+		    // Set the uciok flag to false.
+		    // This thread won't send any other commands
+		    // until uciok has been received.
+		    uciok = false;
                     continue;
                 }
                 
-                if(!uciok) {
+                if (!uciok) {
                     // Go no further until we have received uciok.
                     continue;
                 }
@@ -244,22 +252,20 @@ public class EngineThread extends Thread {
                 // we know that the engine is ready to receive other 
                 // commands than uci. We could always be ready to send
                 // the quit command if it appears here, (even before isready).
-                if(cmd.equals("quit")) {
+                if (cmd.equals("quit")) {
                     try {
                         // reset engine info if we quit
                         engineInfo.clear();
-                        cmdQueue.take();
-                        engineInput.write(cmd + "\n");
-                        engineInput.flush();
+                        take_write_and_flush(cmd);
                         // and wait for engine process to die.
                         boolean finished = engineProcess.waitFor(500, TimeUnit.MILLISECONDS);
-                        if(!finished) {
+                        if (!finished) {
                             engineProcess.destroy();
                             // System.out.println("Engine has been destroyed."); 
                         }
                         // else
                         //    System.out.println("Engine has died a natural death.");
-                    } catch (InterruptedException | IOException e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace(System.out);
                     }
                     continue;
@@ -268,77 +274,71 @@ public class EngineThread extends Thread {
                 // We can (and maybe should, according to the UCI-protocol),
                 // be ready to send the setoption commands directly after uciok
                 // has been received.
-                if(cmd.startsWith("setoption")) {
-                    try {
-                        // Some special actions to do before sending:
-                        if(cmd.startsWith("setoption name Skill Level")) {
-                            Matcher matchExpressionStrength = REG_STRENGTH.matcher(cmd);
-                            if(matchExpressionStrength.find()) {
-                                engineInfo.strength = Integer.parseInt(matchExpressionStrength.group().substring(18));
-                            }
-                        }
-                        if(cmd.startsWith("setoption name MultiPV value")) {
-                            engineInfo.nrPvLines = Integer.parseInt(cmd.substring(29,30));
-                        }
-                        cmdQueue.take();
-                        engineInput.write(cmd + "\n");
-                        engineInput.flush();
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace(System.out);
-                    }
-                    continue;                        
+                if (cmd.startsWith("setoption")) {
+		    if (cmd.startsWith("setoption name UCI_Elo")) {
+			Matcher matchExpressionStrength = REG_STRENGTH.matcher(cmd);
+			if (matchExpressionStrength.find()) {
+			    engineInfo.strength = Integer.parseInt(matchExpressionStrength.group().substring(14));
+			}
+		    }
+                    if (cmd.startsWith(("setoption name UCI_LimitStrength value"))) {
+			String isActive = cmd.substring(38).strip();
+			if (isActive.equals("true")) {
+			    engineInfo.limitedStrength = true;
+			} else {
+			    engineInfo.limitedStrength = false;
+			}
+		    }
+		    if (cmd.startsWith("setoption name MultiPV value")) {
+			engineInfo.nrPvLines = Integer.parseInt(cmd.substring(29));
+		    }
+                    take_write_and_flush(cmd);
+		    continue;                        
                 }
-                
-                if(cmd.equals("isready")) {
-                    try {
-                        // We wish to be able to send isready more than
-                        // once during the lifetime of an engineprocess,
-                        // so the next line is important.
-                        readyok = false;
-                        cmdQueue.take();
-                        engineInput.write(cmd + "\n");
-                        engineInput.flush();
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace(System.out);
-                    }
+
+		// Always be ready to send stop
+                if (cmd.equals("stop")) {
+                    take_write_and_flush(cmd);
+                    continue;
+	        }
+		    
+                if (cmd.equals("isready")) {
+		    // We wish to be able to send isready more than
+		    // once during the lifetime of an engineprocess,
+		    // so the next line is important.
+                    readyok = false;
+		    take_write_and_flush(cmd);
                     continue;
                 }
                 
-                if(!readyok) {
+                if (!readyok) {
                     // Wait for readyok before proceeding to
                     // the sending of other commands below.
                     continue;
                 }
 
-                try {
-                    cmd = (String) cmdQueue.take();
-                    // if the command is "position fen moves", first count the
-                    // numbers of moves so far to generate move numbers in engine info
-                    // todo: needed?
-                    if(cmd.startsWith("position fen")) {
-                        Matcher matchMoves = REG_MOVES.matcher(cmd);
-                        int cnt = 0;
-                        while(matchMoves.find()) {
-                            cnt++;
-                        }
-                        if(cnt > 0) {
-                            engineInfo.halfmoves = cnt;
-                        }
-                        String fen = cmd.substring(13);
-                        engineInfo.setFen(fen);
+                // if the command is "position fen moves", first count the
+                // number of moves so far to generate move numbers in engine info
+                // todo: needed???
+                if (cmd.startsWith("position")) {
+                    Matcher matchMoves = REG_MOVES.matcher(cmd);
+                    int cnt = 0;
+                    while (matchMoves.find()) {
+                        cnt++;
                     }
-                   
-                    // All other commands can be sent as they are,
-                    // without any action.
-                    try {
-                        this.engineInput.write(cmd + "\n");
-                        this.engineInput.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace(System.out);
+                    if (cnt > 0) {
+                        engineInfo.halfmoves = cnt;
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace(System.out);
                 }
+                if (cmd.startsWith("position fen")) {
+                    String fen = cmd.substring(13);
+                    engineInfo.setFen(fen);
+                }
+                // All other commands can be sent as they are,
+                // without any action.
+
+                take_write_and_flush(cmd);
+
             }
         }
     }

@@ -31,7 +31,7 @@ public class EngineController {
     final EngineThread engineThread;
     final BlockingQueue<String> cmdQueue = new LinkedBlockingQueue<String>();
     Engine currentEngine;
-    
+    private boolean inGoInfinite = false;
     public EngineController(ModeMenuController modeMenuController) {
 
         final AtomicReference<String> count = new AtomicReference<>();
@@ -72,6 +72,21 @@ public class EngineController {
     }
 
     public void sendCommand(String cmd) {
+        if (cmd.equals("go infinite")) {
+            inGoInfinite = true;
+        } else {
+            if (inGoInfinite && (!cmd.equals("stop"))
+                    && (!cmd.equals("quit"))) {
+                try {
+                    System.out.println("EXTRA STOP: " + cmd);
+                    cmdQueue.put("stop");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //inGoInfinite = false;
+            }
+            inGoInfinite = false;
+        }
         try {
             cmdQueue.put(cmd);
         } catch (InterruptedException e) {
@@ -147,7 +162,7 @@ public class EngineController {
     }
 
     public void setMultiPV(int n) {
-        if (currentEngine != null && currentEngine.supportsMultiPV()) {
+        if (currentEngine != null) {
             sendCommand("setoption name MultiPV value " + n);
         }
     }

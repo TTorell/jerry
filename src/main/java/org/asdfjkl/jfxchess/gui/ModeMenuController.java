@@ -513,10 +513,6 @@ public class ModeMenuController implements StateChangeListener {
 
         boolean abort = false;
 
-        if(gameModel.getMultiPv() != previousMultiPv) {
-            engineController.setMultiPV(gameModel.getMultiPv());
-            previousMultiPv = gameModel.getMultiPv();
-        }
 
         // if we change from e.g. play white to enter moves, the state change would trigger
         // the notification again in enter moves mode after the state change. thus,
