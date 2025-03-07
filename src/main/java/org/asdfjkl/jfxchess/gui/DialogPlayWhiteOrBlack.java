@@ -30,35 +30,13 @@ import jfxtras.styles.jmetro.JMetroStyleClass;
 import jfxtras.styles.jmetro.Style;
 
 import java.util.function.DoubleFunction;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
-public class DialogNewGame {
-
-    DoubleFunction<Double> createStrengthValues = x -> {
-        if(x <= 3.0) {
-            return x;
-        }
-        if(x == 4.0) {
-            return 5.0;
-        }
-        if(x == 5.0) {
-            return 10.0;
-        }
-        if(x == 6.0) {
-            return 15.0;
-        }
-        if(x == 7) {
-            return 30.0;
-        }
-        return x;
-    };
+public class DialogPlayWhiteOrBlack {
 
     Stage stage;
     boolean accepted = false;
-
-    final RadioButton rbEnterMoves = new RadioButton("Just Enter Moves");
-    final RadioButton rbComputer = new RadioButton("Computer");
-    final RadioButton rbWhite = new RadioButton("White");
-    final RadioButton rbBlack = new RadioButton("Black");
 
     final Slider sliderStrength = new Slider();
     final Slider sliderThinkTime = new Slider();
@@ -97,26 +75,6 @@ public class DialogNewGame {
         hbButtons.getChildren().addAll(spacer, btnOk, btnCancel);
         hbButtons.setHgrow(spacer, Priority.ALWAYS);
         hbButtons.setSpacing(10);
-
-        ToggleGroup radioGroupGame = new ToggleGroup();
-        ToggleGroup radioGroupSide = new ToggleGroup();
-
-        rbEnterMoves.setToggleGroup(radioGroupGame);
-        rbComputer.setToggleGroup(radioGroupGame);
-
-        rbWhite.setToggleGroup(radioGroupSide);
-        rbBlack.setToggleGroup(radioGroupSide);
-
-        rbEnterMoves.setSelected(true);
-        rbWhite.setSelected(true);
-
-        HBox hbGame = new HBox(rbEnterMoves, rbComputer);
-        hbGame.setSpacing(10);
-        hbGame.setPadding(new Insets(5, 20, 20, 0));
-
-        HBox hbSide = new HBox(rbWhite, rbBlack);
-        hbSide.setSpacing(10);
-        hbSide.setPadding(new Insets(5, 20, 20, 0));
 
         sliderStrength.setMin(minElo);
         sliderStrength.setMax(maxElo);
@@ -203,39 +161,22 @@ public class DialogNewGame {
         if(currThinkTime == 30) {
             sliderThinkTime.setValue(7);
         }
-	
+        
+	//Font arialFontBold36  = Font.font("Arial", FontWeight.BOLD, 10);
+        //tglLimitStrength.setFont(arialFontBold10);
+        
         HBox hbStrength = new HBox();
         hbStrength.getChildren().addAll(new Label("Limit Computer Strength: "), tglLimitStrength);
         hbStrength.setSpacing(5);
         VBox vbox = new VBox();
         vbox.getChildren().addAll(
-                new Label("Select Enemy:"),
-                hbGame,
-                new Label("Chose your Side:"),
-                hbSide,
-		hbStrength,
+                 hbStrength,
                 hboxStrength,
                 new Label("Computer's Time per Move"),
                 hboxthinkTime,
                 hbButtons);
         vbox.setSpacing(10);
         vbox.setPadding( new Insets(15, 25, 10, 25));
-
-        rbEnterMoves.setOnAction(actionEvent -> {
-	    tglLimitStrength.setDisable(true);
-            tglLimitStrength.setSelected(false);
-            tglLimitStrength.setText("Off");
-            hboxStrength.setDisable(true);
-            hboxthinkTime.setDisable(true);
-        });
-        
-        rbComputer.setOnAction(actionEvent -> {
-            if (supportsUciLimitStrength) {
-		tglLimitStrength.setDisable(false);
-                sliderStrength.setDisable(false);
-            }
-            hboxthinkTime.setDisable(false);
-        });
 
         tglLimitStrength.setOnAction(actionEvent -> {
             if(tglLimitStrength.isSelected()) {
@@ -247,14 +188,13 @@ public class DialogNewGame {
                 hboxStrength.setDisable(true);
             }
         });
-
-        // Handle initial Enable/Disable-states
-        hboxStrength.setDisable(true);
-        hboxthinkTime.setDisable(true);        
-        hboxStrength.setDisable(true);
-        tglLimitStrength.setDisable(true);
+        
         tglLimitStrength.setSelected(false);
-        if (!supportsUciLimitStrength) {
+        hboxStrength.setDisable(true);        
+        if (supportsUciLimitStrength) {
+           tglLimitStrength.setDisable(false); 
+        } else {
+            tglLimitStrength.setDisable(true);
             txtStrength.setText("N.A.");
             hboxStrength.setDisable(true);
         }

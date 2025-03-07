@@ -68,6 +68,13 @@ public class ModeMenuController implements StateChangeListener {
         gameModel.triggerStateChange();
     }
 
+    public void activateEnterMovesModeNoResult() {
+        engineController.stopEngine();
+        gameModel.setMode(GameModel.MODE_ENTER_MOVES);
+        gameModel.triggerStateChangeNoResult();
+        
+    }
+
     public void activateEnterMovesMode() {
         engineController.stopEngine();
         gameModel.setMode(GameModel.MODE_ENTER_MOVES);
@@ -132,7 +139,7 @@ public class ModeMenuController implements StateChangeListener {
     public void activatePlayWhiteMode() {
         // restart engine and change gamestate.
         engineController.restartEngine(gameModel.activeEngine);
-        if (gameModel.activeEngine.isInternal() || gameModel.eloHasBeenSetInGUI()) {
+        if (gameModel.eloHasBeenSetInGUI()) {
             engineController.setUciLimitStrength(true);
         }
         gameModel.setEloHasBeenSetInGUI(false);
@@ -146,9 +153,10 @@ public class ModeMenuController implements StateChangeListener {
     public void activatePlayBlackMode() {
         // restart engine and change gamestate.
         engineController.restartEngine(gameModel.activeEngine);
-        if (gameModel.activeEngine.isInternal() || gameModel.eloHasBeenSetInGUI()) {
+        if (gameModel.eloHasBeenSetInGUI()) {
             engineController.setUciLimitStrength(true);
         }
+        gameModel.setEloHasBeenSetInGUI(false);
         // trigger statechange
         gameModel.setMode(GameModel.MODE_PLAY_BLACK);
         gameModel.setFlipBoard(true);
@@ -274,6 +282,7 @@ public class ModeMenuController implements StateChangeListener {
     // via the EngineThread and EngineInfo when the corresponding commands
     // are being sent to the engine.
     public void setEngineInfoForUnstartedEngine(Engine activeEngine) {
+        System.out.println("MultiPV: " + activeEngine.getMultiPV());
         engineController.engineInfoSetValues(activeEngine.getName(),
                                              activeEngine.getMultiPV(),
                                              activeEngine.getUciLimitStrength(),

@@ -70,6 +70,9 @@ public class App extends Application implements StateChangeListener {
 
     String moveBuffer = "";
 
+    private RadioMenuItem itmPlayAsWhite = new RadioMenuItem("Play as White");
+    private RadioMenuItem itmPlayAsBlack = new RadioMenuItem("Play as Black");
+
     @Override
     public void start(Stage stage) {
 
@@ -82,7 +85,6 @@ public class App extends Application implements StateChangeListener {
         //tests.pgnReadAllMillBaseTest();
 
         //FooTest();
-
         gameModel = new GameModel();
         gameModel.restoreModel();
         gameModel.restoreBoardStyle();
@@ -140,9 +142,7 @@ public class App extends Application implements StateChangeListener {
         // Mode Menu
         RadioMenuItem itmAnalysis = new RadioMenuItem("Analysis");
         itmAnalysis.setAccelerator(keyCombinationAnalysis);
-        RadioMenuItem itmPlayAsWhite = new RadioMenuItem("Play as White");
         itmPlayAsWhite.setAccelerator(keyCombinationPlayWhite);
-        RadioMenuItem itmPlayAsBlack = new RadioMenuItem("Play as Black");
         itmPlayAsBlack.setAccelerator(keyCombinationPlayBlack);
         itmEnterMoves = new RadioMenuItem("Enter Moves");
         itmEnterMoves.setAccelerator(keyCombinationEnterMoves);
@@ -382,7 +382,7 @@ public class App extends Application implements StateChangeListener {
         EditMenuController editMenuController = new EditMenuController(gameModel);
 
         gameModel.addListener(modeMenuController);
-        modeMenuController.activateEnterMovesMode();
+        modeMenuController.activateEnterMovesModeNoResult();
         // This will set the name, pvLines, limitedStrength and ELO of the
         // restored active engine in the engineOutputView.
         // Previously the ID was always "Stockfish (internal) at startup.
@@ -402,23 +402,13 @@ public class App extends Application implements StateChangeListener {
 
         itmPlayAsWhite.setOnAction(actionEvent -> {
             if(itmPlayAsWhite.isSelected()) {
-                if(gameModel.getMode() != GameModel.MODE_PLAY_WHITE) {
-                    itmPlayAsWhite.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
-                    modeMenuController.activatePlayWhiteMode();
-                }
+                handlePlayWhiteOrBlack(CONSTANTS.WHITE);
             }
         });
 
         itmPlayAsBlack.setOnAction(actionEvent -> {
             if(itmPlayAsBlack.isSelected()) {
-                if(gameModel.getMode() != GameModel.MODE_PLAY_BLACK) {
-                    itmPlayAsBlack.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
-                    modeMenuController.activatePlayBlackMode();
-                }
+                handlePlayWhiteOrBlack(CONSTANTS.BLACK);
             }
         });
 
@@ -866,8 +856,8 @@ public class App extends Application implements StateChangeListener {
             tbMainWindow.setManaged(false);
         }
 
-        gameModel.triggerStateChange();
-
+        gameModel.triggerStateChangeNoResult();
+        
         // un-focus any default button etc.
         spMain.requestFocus();
 
@@ -971,6 +961,35 @@ public class App extends Application implements StateChangeListener {
 
         stage.close();
     }
+    
+    private void handlePlayWhiteOrBlack(boolean color) {
+        DialogPlayWhiteOrBlack dlg = new DialogPlayWhiteOrBlack();
+        boolean accepted = dlg.show(gameModel.activeEngine,
+                gameModel.getComputerThinkTimeSecs(),
+                gameModel.THEME);
+        if(accepted) {
+            gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
+            gameModel.activeEngine.setElo(dlg.strength);
+            gameModel.setEloHasBeenSetInGUI(dlg.limitStrength());
+            if(color == CONSTANTS.WHITE) {
+                if(gameModel.getMode() != GameModel.MODE_PLAY_WHITE) {
+                    itmPlayAsWhite.setSelected(true);
+                    tglEngineOnOff.setSelected(true);
+                    tglEngineOnOff.setText("On");
+                }
+                modeMenuController.activatePlayWhiteMode();
+            } else {
+                if(gameModel.getMode() != GameModel.MODE_PLAY_BLACK) {
+                    itmPlayAsBlack.setSelected(true);
+                    tglEngineOnOff.setSelected(true);
+                    tglEngineOnOff.setText("On");
+                }
+                modeMenuController.activatePlayBlackMode();
+            }
+        } else {
+            modeMenuController.activateEnterMovesMode(); 
+        }
+    }
 
     private void handleNewGame() {
         DialogNewGame dlg = new DialogNewGame();
@@ -982,10 +1001,7 @@ public class App extends Application implements StateChangeListener {
             gameModel.currentPgnDatabaseIdx = -1;
             gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
             gameModel.activeEngine.setElo(dlg.strength);
-	    // Set eloHasBeenSetInGUI to be able to separate
-	    // new Game from playblack and playwhite for
-	    // added engines supporting UCI_LimitStrength.
-            gameModel.setEloHasBeenSetInGUI(true);
+            gameModel.setEloHasBeenSetInGUI(dlg.limitStrength());
             Game g = new Game();
             g.getRootNode().setBoard(new Board(true));
             gameModel.setGame(g);
@@ -998,8 +1014,10 @@ public class App extends Application implements StateChangeListener {
             }
             if(dlg.rbComputer.isSelected()) {
                 if(dlg.rbWhite.isSelected()) {
+                    itmPlayAsWhite.setSelected(true);
                     modeMenuController.activatePlayWhiteMode();
                 } else {
+                    itmPlayAsBlack.setSelected(true);
                     modeMenuController.activatePlayBlackMode();
                 }
             } else {
