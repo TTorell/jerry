@@ -66,20 +66,18 @@ public class DialogNewGame {
     int thinkTime = 3;
     int strength = 0;
 
-    boolean supportsUciLimitStrength = false;
     ToggleButton tglLimitStrength = new ToggleButton("Off");
 
-    public boolean show(Engine activEngine,
+    public boolean show(Engine activeEngine,
                         int currThinkTime,
                         int colorTheme) {
 
         int minElo = 1200;
         int maxElo = 3000;
-        supportsUciLimitStrength = activEngine.supportsUciLimitStrength();
-        if(supportsUciLimitStrength) {
-            strength = activEngine.getUciElo();
-            minElo = activEngine.getMinUciElo();
-            maxElo = activEngine.getMaxUciElo();
+        if(activeEngine.supportsUciLimitStrength()) {
+            strength = activeEngine.getUciElo();
+            minElo = activeEngine.getMinUciElo();
+            maxElo = activeEngine.getMaxUciElo();
         }
 
 
@@ -223,40 +221,31 @@ public class DialogNewGame {
 
         rbEnterMoves.setOnAction(actionEvent -> {
 	    tglLimitStrength.setDisable(true);
-            tglLimitStrength.setSelected(false);
-            tglLimitStrength.setText("Off");
+//            tglLimitStrength.setSelected(activeEngine.getUciLimitStrength());
+//            tglLimitStrength.setText(activeEngine.getUciLimitStrength()? "On" : "Off");
             hboxStrength.setDisable(true);
             hboxthinkTime.setDisable(true);
         });
         
         rbComputer.setOnAction(actionEvent -> {
-            if (supportsUciLimitStrength) {
-		tglLimitStrength.setDisable(false);
-                sliderStrength.setDisable(false);
-            }
+            tglLimitStrength.setDisable(!activeEngine.supportsUciLimitStrength());
+            hboxStrength.setDisable(!tglLimitStrength.isSelected());
             hboxthinkTime.setDisable(false);
         });
 
         tglLimitStrength.setOnAction(actionEvent -> {
-            if(tglLimitStrength.isSelected()) {
-                tglLimitStrength.setText("On");
-                hboxStrength.setDisable(false);
-                
-            } else {
-                tglLimitStrength.setText("Off");
-                hboxStrength.setDisable(true);
-            }
+            tglLimitStrength.setText(tglLimitStrength.isSelected()? "On" : "Off");
+            hboxStrength.setDisable(!tglLimitStrength.isSelected());
         });
 
         // Handle initial Enable/Disable-states
         hboxStrength.setDisable(true);
-        hboxthinkTime.setDisable(true);        
-        hboxStrength.setDisable(true);
+        hboxthinkTime.setDisable(true);
         tglLimitStrength.setDisable(true);
-        tglLimitStrength.setSelected(false);
-        if (!supportsUciLimitStrength) {
+        tglLimitStrength.setSelected(activeEngine.getUciLimitStrength());
+        tglLimitStrength.setText(activeEngine.getUciLimitStrength()? "On" : "Off");
+        if (!activeEngine.supportsUciLimitStrength()) {
             txtStrength.setText("N.A.");
-            hboxStrength.setDisable(true);
         }
 
         btnOk.setOnAction(e -> {
@@ -298,7 +287,7 @@ public class DialogNewGame {
     public boolean limitStrength() {
         return tglLimitStrength.isSelected();
     }
-
+    
 }
 
 

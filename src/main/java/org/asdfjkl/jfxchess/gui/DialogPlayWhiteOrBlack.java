@@ -44,20 +44,18 @@ public class DialogPlayWhiteOrBlack {
     int thinkTime = 3;
     int strength = 0;
 
-    boolean supportsUciLimitStrength = false;
     ToggleButton tglLimitStrength = new ToggleButton("Off");
 
-    public boolean show(Engine activEngine,
+    public boolean show(Engine activeEngine,
                         int currThinkTime,
                         int colorTheme) {
 
         int minElo = 1200;
         int maxElo = 3000;
-        supportsUciLimitStrength = activEngine.supportsUciLimitStrength();
-        if(supportsUciLimitStrength) {
-            strength = activEngine.getUciElo();
-            minElo = activEngine.getMinUciElo();
-            maxElo = activEngine.getMaxUciElo();
+        if(activeEngine.supportsUciLimitStrength()) {
+            strength = activeEngine.getUciElo();
+            minElo = activeEngine.getMinUciElo();
+            maxElo = activeEngine.getMaxUciElo();
         }
 
 
@@ -179,24 +177,16 @@ public class DialogPlayWhiteOrBlack {
         vbox.setPadding( new Insets(15, 25, 10, 25));
 
         tglLimitStrength.setOnAction(actionEvent -> {
-            if(tglLimitStrength.isSelected()) {
-                tglLimitStrength.setText("On");
-                hboxStrength.setDisable(false);
-                
-            } else {
-                tglLimitStrength.setText("Off");
-                hboxStrength.setDisable(true);
-            }
+            tglLimitStrength.setText(tglLimitStrength.isSelected()? "On" : "Off");
+            hboxStrength.setDisable(!tglLimitStrength.isSelected());
         });
         
-        tglLimitStrength.setSelected(false);
-        hboxStrength.setDisable(true);        
-        if (supportsUciLimitStrength) {
-           tglLimitStrength.setDisable(false); 
-        } else {
-            tglLimitStrength.setDisable(true);
+        hboxStrength.setDisable(!activeEngine.supportsUciLimitStrength());
+        tglLimitStrength.setDisable(!activeEngine.supportsUciLimitStrength());
+        tglLimitStrength.setSelected(activeEngine.getUciLimitStrength());
+        tglLimitStrength.setText(activeEngine.getUciLimitStrength()? "On" : "Off");
+        if (!activeEngine.supportsUciLimitStrength()) {
             txtStrength.setText("N.A.");
-            hboxStrength.setDisable(true);
         }
 
         btnOk.setOnAction(e -> {

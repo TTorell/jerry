@@ -226,13 +226,13 @@ public class Engine implements Comparator<Engine>{
 
     }
 
-    // public void setUciLimitStrength(boolean val) {
-    //     for (EngineOption option : options) {
-    //         if (option.name.equals("UCI_LimitStrength")) {
-    //             option.checkStatusValue = val;
-    //         }
-    //     }
-    // }
+    public void setUciLimitStrength(boolean val) {
+        for (EngineOption option : options) {
+            if (option.name.equals("UCI_LimitStrength")) {
+                option.checkStatusValue = val;
+            }
+        }
+    }
     
     public boolean getUciLimitStrength() {
         for (EngineOption option : options) {

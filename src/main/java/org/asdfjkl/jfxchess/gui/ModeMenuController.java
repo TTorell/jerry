@@ -282,7 +282,6 @@ public class ModeMenuController implements StateChangeListener {
     // via the EngineThread and EngineInfo when the corresponding commands
     // are being sent to the engine.
     public void setEngineInfoForUnstartedEngine(Engine activeEngine) {
-        System.out.println("MultiPV: " + activeEngine.getMultiPV());
         engineController.engineInfoSetValues(activeEngine.getName(),
                                              activeEngine.getMultiPV(),
                                              activeEngine.getUciLimitStrength(),

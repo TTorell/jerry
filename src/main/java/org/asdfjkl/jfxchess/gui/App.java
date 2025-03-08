@@ -970,7 +970,7 @@ public class App extends Application implements StateChangeListener {
         if(accepted) {
             gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
             gameModel.activeEngine.setElo(dlg.strength);
-            gameModel.setEloHasBeenSetInGUI(dlg.limitStrength());
+            gameModel.activeEngine.setUciLimitStrength(dlg.limitStrength());
             if(color == CONSTANTS.WHITE) {
                 if(gameModel.getMode() != GameModel.MODE_PLAY_WHITE) {
                     itmPlayAsWhite.setSelected(true);
@@ -1001,7 +1001,7 @@ public class App extends Application implements StateChangeListener {
             gameModel.currentPgnDatabaseIdx = -1;
             gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
             gameModel.activeEngine.setElo(dlg.strength);
-            gameModel.setEloHasBeenSetInGUI(dlg.limitStrength());
+            gameModel.activeEngine.setUciLimitStrength(dlg.limitStrength());
             Game g = new Game();
             g.getRootNode().setBoard(new Board(true));
             gameModel.setGame(g);
