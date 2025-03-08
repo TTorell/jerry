@@ -68,6 +68,13 @@ public class ModeMenuController implements StateChangeListener {
         gameModel.triggerStateChange();
     }
 
+    public void activateEnterMovesModeNoResult() {
+        engineController.stopEngine();
+        gameModel.setMode(GameModel.MODE_ENTER_MOVES);
+        gameModel.triggerStateChangeNoResult();
+        
+    }
+
     public void activateEnterMovesMode() {
         engineController.stopEngine();
         gameModel.setMode(GameModel.MODE_ENTER_MOVES);

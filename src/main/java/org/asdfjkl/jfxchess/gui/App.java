@@ -382,7 +382,7 @@ public class App extends Application implements StateChangeListener {
         EditMenuController editMenuController = new EditMenuController(gameModel);
 
         gameModel.addListener(modeMenuController);
-        modeMenuController.activateEnterMovesMode();
+        modeMenuController.activateEnterMovesModeNoResult();
         // This will set the name, pvLines, limitedStrength and ELO of the
         // restored active engine in the engineOutputView.
         // Previously the ID was always "Stockfish (internal) at startup.
@@ -866,8 +866,8 @@ public class App extends Application implements StateChangeListener {
             tbMainWindow.setManaged(false);
         }
 
-        gameModel.triggerStateChange();
-
+        gameModel.triggerStateChangeNoResult();
+        
         // un-focus any default button etc.
         spMain.requestFocus();
 
