@@ -32,6 +32,7 @@ import jfxtras.styles.jmetro.Style;
 import java.util.function.DoubleFunction;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import org.asdfjkl.jfxchess.lib.CONSTANTS;
 
 public class DialogPlayWhiteOrBlack {
 
@@ -45,7 +46,13 @@ public class DialogPlayWhiteOrBlack {
     int strength = 0;
 
     ToggleButton tglLimitStrength = new ToggleButton("Off");
-
+    
+    public DialogPlayWhiteOrBlack(boolean color) {
+        stage = new Stage();
+        String scolor = (color == CONSTANTS.WHITE)? "White" : "Black";
+        stage.setTitle("Play as " + scolor);
+    }
+    
     public boolean show(Engine activeEngine,
                         int currThinkTime,
                         int colorTheme) {
@@ -58,8 +65,6 @@ public class DialogPlayWhiteOrBlack {
             maxElo = activeEngine.getMaxUciElo();
         }
 
-
-        stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
 
         Button btnOk = new Button();

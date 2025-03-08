@@ -124,7 +124,6 @@ public class EngineOutputView implements StateChangeListener {
     public void setText(String info) {
 
         if(isEnabled) {
-            System.out.println(info);
             //pv1.setText(info);
             // | id (Level MAX) | zobrist  |  nps | hashfull | tbhits | current Move + depth | eval+line pv1 | .. pv2 | ...pv3 | ...pv4 | ... | ...pv64 |
 

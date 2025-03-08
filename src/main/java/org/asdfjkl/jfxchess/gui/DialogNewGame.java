@@ -83,6 +83,7 @@ public class DialogNewGame {
 
         stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("New Game");
 
         Button btnOk = new Button();
         btnOk.setText("OK");

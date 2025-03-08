@@ -61,8 +61,8 @@ public class ModeMenuController implements StateChangeListener {
     }
 
     public void activateAnalysisMode() {
-        engineController.restartEngine(gameModel.activeEngine);
-        engineController.setUciLimitStrength(false);
+        gameModel.setUciLimitStrength(false);
+        engineController.restartEngine(gameModel.getActiveEngine());
         engineController.setMultiPV(gameModel.getMultiPv());
         gameModel.setMode(GameModel.MODE_ANALYSIS);
         gameModel.triggerStateChange();
@@ -137,12 +137,9 @@ public class ModeMenuController implements StateChangeListener {
     }
 
     public void activatePlayWhiteMode() {
-        // restart engine and change gamestate.
-        engineController.restartEngine(gameModel.activeEngine);
-        if (gameModel.eloHasBeenSetInGUI()) {
-            engineController.setUciLimitStrength(true);
-        }
-        gameModel.setEloHasBeenSetInGUI(false);
+        // limitStrength has aready been set in the dialog.
+        // Restart engine and change gamestate.
+        engineController.restartEngine(gameModel.getActiveEngine());
         // trigger statechange
 	gameModel.setMode(GameModel.MODE_PLAY_WHITE);
         gameModel.setFlipBoard(false);
@@ -151,12 +148,9 @@ public class ModeMenuController implements StateChangeListener {
     }
 
     public void activatePlayBlackMode() {
+        // limitStrength has aready been set in the dialog.
         // restart engine and change gamestate.
-        engineController.restartEngine(gameModel.activeEngine);
-        if (gameModel.eloHasBeenSetInGUI()) {
-            engineController.setUciLimitStrength(true);
-        }
-        gameModel.setEloHasBeenSetInGUI(false);
+        engineController.restartEngine(gameModel.getActiveEngine());
         // trigger statechange
         gameModel.setMode(GameModel.MODE_PLAY_BLACK);
         gameModel.setFlipBoard(true);
@@ -166,8 +160,8 @@ public class ModeMenuController implements StateChangeListener {
 
     public void activatePlayoutPositionMode() {
         // first change gamestate and reset engine
-        engineController.restartEngine(gameModel.activeEngine);
-        engineController.setUciLimitStrength(false);    
+        gameModel.setUciLimitStrength(false);
+        engineController.restartEngine(gameModel.getActiveEngine());
         gameModel.setMode(GameModel.MODE_PLAYOUT_POSITION);
         gameModel.setFlipBoard(false);
         gameModel.triggerStateChange();
@@ -179,10 +173,8 @@ public class ModeMenuController implements StateChangeListener {
         gameModel.getGame().removeAllVariants();
         gameModel.getGame().removeAllAnnotations();
         gameModel.getGame().setTreeWasChanged(true);
-
-        engineController.restartEngine(gameModel.activeEngine);
-        engineController.setUciLimitStrength(false);
-        //engineController.setMultiPV(1);
+        gameModel.setUciLimitStrength(false);
+        engineController.restartEngine(gameModel.getActiveEngine());
         gameModel.setFlipBoard(false);
         gameModel.getGame().goToRoot();
         gameModel.getGame().goToLeaf();
@@ -203,7 +195,7 @@ public class ModeMenuController implements StateChangeListener {
         //ArrayList<String> uciMoves0 = gameModel.book.findMoves(zobrist);
         boolean maxDepthReached = false;
         int currentDepth = gameModel.getGame().getCurrentNode().getDepth();
-        int currentElo = gameModel.activeEngine.getUciElo();
+        int currentElo = gameModel.getUciElo();
         // engine supports setting ELO
         // let's limit book knowledge according to ELO
         if(currentElo > 0) {
@@ -300,7 +292,7 @@ public class ModeMenuController implements StateChangeListener {
         for(Engine engine : gameModel.engines) {
             enginesCopy.add(engine);
         }
-        int selectedIdx = gameModel.engines.indexOf(gameModel.activeEngine);
+        int selectedIdx = gameModel.engines.indexOf(gameModel.getActiveEngine());
         if(selectedIdx < 0) {
             selectedIdx = 0;
         }
@@ -309,7 +301,7 @@ public class ModeMenuController implements StateChangeListener {
             ArrayList<Engine> engineList = new ArrayList<>(dlg.engineList);
             Engine selectedEngine = dlg.engineList.get(dlg.selectedIndex);
             gameModel.engines = engineList;
-            gameModel.activeEngine = selectedEngine;
+            gameModel.setActiveEngine(selectedEngine);
             // Change the engine-info in the bottom panel immediately on OK
             // being pressed. Previously it didn't change until we started
             // playing.

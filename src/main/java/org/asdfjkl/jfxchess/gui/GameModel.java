@@ -47,14 +47,13 @@ public class GameModel {
     private boolean multiPvChanged = false;
     private boolean flipBoard = false;
     private boolean humanPlayerColor = CONSTANTS.WHITE;
-    private boolean eloHasBeenSetInGui = false;
 
     public boolean wasSaved = false;
     private int engineStrength = 20;
     private int engineThinkTimeSecs = 1;
 
     ArrayList<Engine> engines = new ArrayList<>();
-    Engine activeEngine = null;
+    private Engine activeEngine = null;
 
     private int gameAnalysisForPlayer = BOTH_PLAYERS;
     private double gameAnalysisThreshold = 0.5; // pawns
@@ -302,10 +301,6 @@ public class GameModel {
         return currentMode;
     }
 
-    public int getMultiPv() {
-        return activeEngine.getMultiPV();
-    }
-
     public void setFlipBoard(boolean flipBoard) {
         this.flipBoard = flipBoard;
     }
@@ -336,13 +331,6 @@ public class GameModel {
 
     public void setSearchPattern(SearchPattern searchPattern) {
         this.searchPattern = searchPattern;
-    }
-
-    public void setMultiPv(int multiPv) {
-        if(multiPv >= 1 && multiPv <= activeEngine.getMaxMultiPV() && multiPv <= MAX_PV) {
-            activeEngine.setMultiPV(multiPv);
-            this.multiPvChanged = true;
-        }
     }
 
     public boolean wasMultiPvChanged() {
@@ -597,14 +585,47 @@ public class GameModel {
             }
         }
     }
-
-    public boolean eloHasBeenSetInGUI() {
-        return eloHasBeenSetInGui;
+    
+    public boolean getUciLimitStrength() {
+        return activeEngine.getUciLimitStrength();
+    }
+ 
+    public void setUciLimitStrength(boolean b) {
+        activeEngine.setUciLimitStrength(b);
     }
     
-    public void setEloHasBeenSetInGUI(boolean b) {
-        eloHasBeenSetInGui = b;
+    public int getUciElo() {
+        return activeEngine.getUciElo();
     }
+
+    public void setUciElo(int elo) {
+        activeEngine.setElo(elo);
+    }
+   
+    int getMaxMultiPV() {
+        return activeEngine.getMaxMultiPV();
+    }
+
+    public int getMultiPv() {
+        return activeEngine.getMultiPV();
+    }
+    
+    public void setMultiPv(int multiPv) {
+        if(multiPv >= 1 && multiPv <= activeEngine.getMaxMultiPV() && multiPv <= MAX_PV) {
+            activeEngine.setMultiPV(multiPv);
+            this.multiPvChanged = true;
+        }
+    }
+
+    public Engine getActiveEngine() {
+        return activeEngine;
+    }
+    
+    public void setActiveEngine(Engine engine) {
+        activeEngine = engine;
+    }
+
+            
 }
 
 

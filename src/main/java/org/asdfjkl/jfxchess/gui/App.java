@@ -315,6 +315,7 @@ public class App extends Application implements StateChangeListener {
 
         // Buttons for Engine On/Off and TextFlow for Engine Output
         tglEngineOnOff = new ToggleButton("Off");
+        tglEngineOnOff.setSelected(false);
         Label lblMultiPV = new Label("Lines:");
         /*
         ComboBox<Integer> cmbMultiPV = new ComboBox<Integer>();
@@ -386,7 +387,7 @@ public class App extends Application implements StateChangeListener {
         // This will set the name, pvLines, limitedStrength and ELO of the
         // restored active engine in the engineOutputView.
         // Previously the ID was always "Stockfish (internal) at startup.
-        modeMenuController.setEngineInfoForUnstartedEngine(gameModel.activeEngine);
+        modeMenuController.setEngineInfoForUnstartedEngine(gameModel.getActiveEngine());
 
         itmSaveCurrentGameAs.setOnAction(e -> {
            gameMenuController.handleSaveCurrentGame();
@@ -415,8 +416,6 @@ public class App extends Application implements StateChangeListener {
         itmPlayOutPosition.setOnAction(actionEvent -> {
             if(gameModel.getMode() != GameModel.MODE_PLAYOUT_POSITION) {
                 itmPlayOutPosition.setSelected(true);
-                tglEngineOnOff.setSelected(true);
-                tglEngineOnOff.setText("on");
                 modeMenuController.activatePlayoutPositionMode();
             }
         });
@@ -425,24 +424,12 @@ public class App extends Application implements StateChangeListener {
             if(itmAnalysis.isSelected()) {
                 if(gameModel.getMode() != GameModel.MODE_ANALYSIS) {
                     itmAnalysis.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
                     modeMenuController.activateAnalysisMode();
                 }
-            } else {
-                /*
-                itmEnterMoves.setSelected(true);
-                tglEngineOnOff.setSelected(false);
-                tglEngineOnOff.setText("Off");
-                modeMenuController.activateEnterMovesMode();
-
-                 */
             }
         });
 
         itmEnterMoves.setOnAction(actionEvent -> {
-            tglEngineOnOff.setSelected(false);
-            tglEngineOnOff.setText("Off");
             modeMenuController.activateEnterMovesMode();
         });
 
@@ -453,11 +440,9 @@ public class App extends Application implements StateChangeListener {
         tglEngineOnOff.setOnAction(actionEvent -> {
             if(tglEngineOnOff.isSelected()) {
                 itmAnalysis.setSelected(true);
-                tglEngineOnOff.setText("On");
                 modeMenuController.activateAnalysisMode();
             } else {
                 itmEnterMoves.setSelected(true);
-                tglEngineOnOff.setText("Off");
                 modeMenuController.activateEnterMovesMode();
             }
         });
@@ -465,7 +450,7 @@ public class App extends Application implements StateChangeListener {
 
         btnAddEngineLine.setOnAction(actionEvent -> {
             int currentMultiPv = gameModel.getMultiPv();
-            if (currentMultiPv < gameModel.activeEngine.getMaxMultiPV() &&
+            if (currentMultiPv < gameModel.getMaxMultiPV() &&
 		currentMultiPv < gameModel.MAX_PV) {
                 gameModel.setMultiPv(currentMultiPv + 1);
                 modeMenuController.engineSetOptionMultiPV(gameModel.getMultiPv());
@@ -761,31 +746,17 @@ public class App extends Application implements StateChangeListener {
                 // enter analysis mode
                 if(gameModel.getMode() != GameModel.MODE_ANALYSIS) {
                     itmAnalysis.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
                     modeMenuController.activateAnalysisMode();
                 }
             }
             if(keyCombinationPlayWhite.match(event)) {
-                if(gameModel.getMode() != GameModel.MODE_PLAY_WHITE) {
-                    itmPlayAsWhite.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
-                    modeMenuController.activatePlayWhiteMode();
-                }
+                handlePlayWhiteOrBlack(CONSTANTS.WHITE);
             }
             if(keyCombinationPlayBlack.match(event)) {
-                if(gameModel.getMode() != GameModel.MODE_PLAY_BLACK) {
-                    itmPlayAsBlack.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
-                    modeMenuController.activatePlayBlackMode();
-                }
+                handlePlayWhiteOrBlack(CONSTANTS.BLACK);
             }
             if(keyCombinationEnterMoves.match(event)|| event.getCode() == KeyCode.ESCAPE) {
                 // enter moves mode
-                tglEngineOnOff.setSelected(false);
-                tglEngineOnOff.setText("Off");
                 modeMenuController.activateEnterMovesMode();
             }
             if(event.getCode() == KeyCode.F11) {
@@ -963,27 +934,19 @@ public class App extends Application implements StateChangeListener {
     }
     
     private void handlePlayWhiteOrBlack(boolean color) {
-        DialogPlayWhiteOrBlack dlg = new DialogPlayWhiteOrBlack();
-        boolean accepted = dlg.show(gameModel.activeEngine,
+        DialogPlayWhiteOrBlack dlg = new DialogPlayWhiteOrBlack(color);
+        boolean accepted = dlg.show(gameModel.getActiveEngine(),
                 gameModel.getComputerThinkTimeSecs(),
                 gameModel.THEME);
         if(accepted) {
             gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
-            gameModel.activeEngine.setElo(dlg.strength);
-            gameModel.activeEngine.setUciLimitStrength(dlg.limitStrength());
+            gameModel.setUciElo(dlg.strength);
+            gameModel.setUciLimitStrength(dlg.limitStrength());
             if(color == CONSTANTS.WHITE) {
-                if(gameModel.getMode() != GameModel.MODE_PLAY_WHITE) {
-                    itmPlayAsWhite.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
-                }
+                itmPlayAsWhite.setSelected(true);
                 modeMenuController.activatePlayWhiteMode();
             } else {
-                if(gameModel.getMode() != GameModel.MODE_PLAY_BLACK) {
-                    itmPlayAsBlack.setSelected(true);
-                    tglEngineOnOff.setSelected(true);
-                    tglEngineOnOff.setText("On");
-                }
+                itmPlayAsBlack.setSelected(true);
                 modeMenuController.activatePlayBlackMode();
             }
         } else {
@@ -993,15 +956,15 @@ public class App extends Application implements StateChangeListener {
 
     private void handleNewGame() {
         DialogNewGame dlg = new DialogNewGame();
-        boolean accepted = dlg.show(gameModel.activeEngine,
+        boolean accepted = dlg.show(gameModel.getActiveEngine(),
                 gameModel.getComputerThinkTimeSecs(),
                 gameModel.THEME);
         if(accepted) {
             gameModel.wasSaved = false;
             gameModel.currentPgnDatabaseIdx = -1;
             gameModel.setComputerThinkTimeSecs(dlg.thinkTime);
-            gameModel.activeEngine.setElo(dlg.strength);
-            gameModel.activeEngine.setUciLimitStrength(dlg.limitStrength());
+            gameModel.setUciElo(dlg.strength);
+            gameModel.setUciLimitStrength(dlg.limitStrength());
             Game g = new Game();
             g.getRootNode().setBoard(new Board(true));
             gameModel.setGame(g);
@@ -1033,9 +996,6 @@ public class App extends Application implements StateChangeListener {
                 gameModel.THEME);
         if(accepted) {
             itmEnterMoves.setSelected(true);
-            tglEngineOnOff.setSelected(true);
-            tglEngineOnOff.setText("On");
-
             if(dlg.rbBoth.isSelected()) {
                 gameModel.setGameAnalysisForPlayer(GameModel.BOTH_PLAYERS);
             }
