@@ -91,8 +91,9 @@ public class ModeMenuController implements StateChangeListener {
 
         boolean continueAnalysis = true;
 
-        boolean parentIsRoot = (gameModel.getGame().getCurrentNode().getParent() == gameModel.getGame().getRootNode());
-        if(!parentIsRoot) {
+        if(gameModel.currentParentIsRoot() || gameModel.currentNodeIsRoot()) {
+            continueAnalysis = false;
+        } else {
             // if the current position is in the opening book,
             // we stop the analysis
             long zobrist = gameModel.getGame().getCurrentNode().getBoard().getZobrist();
@@ -110,8 +111,6 @@ public class ModeMenuController implements StateChangeListener {
                 engineController.sendNewPosition(fen);
                 engineController.uciGoMoveTime(gameModel.getGameAnalysisThinkTimeSecs() * 1000);
             }
-        } else {
-            continueAnalysis = false;
         }
 
         if(!continueAnalysis) {
@@ -316,8 +315,8 @@ public class ModeMenuController implements StateChangeListener {
         gameModel.doNotNotifyAboutResult = false;
     }
 
-    public void handleBestMove(String bestmove) {
-        //System.out.println("handling bestmove: "+bestmove);
+    private void handleBestMove(String bestmove) {
+        System.out.println("handling bestmove: "+bestmove);
         int mode = gameModel.getMode();
 
         if(mode == GameModel.MODE_ENTER_MOVES) {
@@ -375,7 +374,6 @@ public class ModeMenuController implements StateChangeListener {
             if(gameModel.getGame().getCurrentNode().getBoard().isCheckmate()){
                 gameModel.currentIsMate = true;
             }
-
 
             // ignore leafs (game ended here)
             if(!gameModel.getGame().getCurrentNode().isLeaf()) {

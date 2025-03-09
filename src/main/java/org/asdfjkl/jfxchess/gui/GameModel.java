@@ -586,6 +586,14 @@ public class GameModel {
         }
     }
     
+    public boolean currentNodeIsRoot() {
+        return (game.getCurrentNode() == game.getRootNode());
+    }
+    
+    public boolean currentParentIsRoot() {
+        return (game.getCurrentNode().getParent() == game.getRootNode());
+    }
+    
     public boolean getUciLimitStrength() {
         return activeEngine.getUciLimitStrength();
     }
