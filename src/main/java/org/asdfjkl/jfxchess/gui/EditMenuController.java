@@ -93,7 +93,7 @@ public class EditMenuController {
             }
             gameModel.getGame().setResult(dlg.gameResult);
             gameModel.getGame().setHeaderWasChanged(true);
-            gameModel.triggerStateChange();
+            gameModel.triggerStateChangeNoResult();
         }
     }
 

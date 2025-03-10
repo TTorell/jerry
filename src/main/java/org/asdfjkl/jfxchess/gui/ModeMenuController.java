@@ -68,6 +68,13 @@ public class ModeMenuController implements StateChangeListener {
         gameModel.triggerStateChange();
     }
 
+    public void activateEnterMovesModeNoResult() {
+        engineController.stopEngine();
+        gameModel.setMode(GameModel.MODE_ENTER_MOVES);
+        gameModel.triggerStateChangeNoResult();
+        
+    }
+
     public void activateEnterMovesMode() {
         engineController.stopEngine();
         gameModel.setMode(GameModel.MODE_ENTER_MOVES);
@@ -84,8 +91,9 @@ public class ModeMenuController implements StateChangeListener {
 
         boolean continueAnalysis = true;
 
-        boolean parentIsRoot = (gameModel.getGame().getCurrentNode().getParent() == gameModel.getGame().getRootNode());
-        if(!parentIsRoot) {
+        if(gameModel.currentParentIsRoot() || gameModel.currentNodeIsRoot()) {
+            continueAnalysis = false;
+        } else {
             // if the current position is in the opening book,
             // we stop the analysis
             long zobrist = gameModel.getGame().getCurrentNode().getBoard().getZobrist();
@@ -103,8 +111,6 @@ public class ModeMenuController implements StateChangeListener {
                 engineController.sendNewPosition(fen);
                 engineController.uciGoMoveTime(gameModel.getGameAnalysisThinkTimeSecs() * 1000);
             }
-        } else {
-            continueAnalysis = false;
         }
 
         if(!continueAnalysis) {
@@ -175,7 +181,6 @@ public class ModeMenuController implements StateChangeListener {
 
         engineController.restartEngine(gameModel.activeEngine);
         engineController.setUciLimitStrength(false);
-        //engineController.setMultiPV(1);
         gameModel.setFlipBoard(false);
         gameModel.getGame().goToRoot();
         gameModel.getGame().goToLeaf();
@@ -282,12 +287,10 @@ public class ModeMenuController implements StateChangeListener {
     }
     
     public void editEngines() {
-        // To not be bothered by result notifications during editing engines.
-        gameModel.doNotNotifyAboutResult = true;
         // The following call stops the engine-process, set the ENTER_MOVES_MODE
         // and calls GameModel.triggerChangeState(). Previously the engine was
         // not stopped here.
-        activateEnterMovesMode();
+        activateEnterMovesModeNoResult();
         DialogEngines dlg = new DialogEngines();
         ArrayList<Engine> enginesCopy = new ArrayList<>();
         for(Engine engine : gameModel.engines) {
@@ -307,14 +310,10 @@ public class ModeMenuController implements StateChangeListener {
             // being pressed. Previously it didn't change until we started
             // playing.
             setEngineInfoForUnstartedEngine(selectedEngine);
-            // // reset pv line to 1 for new engine
-            // gameModel.setMultiPv(1);
 
-            gameModel.setMultiPvChange(true); // Not important anymore.            
-            gameModel.triggerStateChange(); // Important.
+            gameModel.setMultiPvChange(true);            
+            gameModel.triggerStateChangeNoResult();
         }
-        // Here we must reset result notifications.
-        gameModel.doNotNotifyAboutResult = false;
     }
 
     public void handleBestMove(String bestmove) {
@@ -376,7 +375,6 @@ public class ModeMenuController implements StateChangeListener {
             if(gameModel.getGame().getCurrentNode().getBoard().isCheckmate()){
                 gameModel.currentIsMate = true;
             }
-
 
             // ignore leafs (game ended here)
             if(!gameModel.getGame().getCurrentNode().isLeaf()) {

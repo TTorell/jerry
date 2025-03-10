@@ -382,7 +382,7 @@ public class App extends Application implements StateChangeListener {
         EditMenuController editMenuController = new EditMenuController(gameModel);
 
         gameModel.addListener(modeMenuController);
-        modeMenuController.activateEnterMovesMode();
+        modeMenuController.activateEnterMovesModeNoResult();
         // This will set the name, pvLines, limitedStrength and ELO of the
         // restored active engine in the engineOutputView.
         // Previously the ID was always "Stockfish (internal) at startup.
@@ -479,7 +479,7 @@ public class App extends Application implements StateChangeListener {
 		currentMultiPv < gameModel.MAX_PV) {
                 gameModel.setMultiPv(currentMultiPv + 1);
                 modeMenuController.engineSetOptionMultiPV(gameModel.getMultiPv());
-                gameModel.triggerStateChange();
+                gameModel.triggerStateChangeNoResult();
             }
         });
 
@@ -488,15 +488,15 @@ public class App extends Application implements StateChangeListener {
             if (currentMultiPv > 1) {
                 gameModel.setMultiPv(currentMultiPv - 1);
                 modeMenuController.engineSetOptionMultiPV(gameModel.getMultiPv());
-                gameModel.triggerStateChange();
+                gameModel.triggerStateChangeNoResult();
             }
         });
 
         cbShowEngineLines.setOnAction(actionEvent -> {
-            if(!cbShowEngineLines.isSelected()) {
-                engineOutputView.disablePVLines();
+            if(cbShowEngineLines.isSelected()) {
+                engineOutputView.enableOutput();
             } else {
-                engineOutputView.enablePVLines();
+                engineOutputView.disableOutput();
             }
         });
 
@@ -582,16 +582,18 @@ public class App extends Application implements StateChangeListener {
 
         itmFlipBoard.setOnAction(e -> {
             gameModel.setFlipBoard(!gameModel.getFlipBoard());
-            gameModel.triggerStateChange();
+            gameModel.triggerStateChangeNoResult();
         });
 
         itmShowSearchInfo.setOnAction(e -> {
             if(engineOutputView.isEnabled()) {
                 engineOutputView.disableOutput();
+                cbShowEngineLines.setSelected(false);
             } else {
                 engineOutputView.enableOutput();
+                cbShowEngineLines.setSelected(true);
             }
-            gameModel.triggerStateChange();
+            gameModel.triggerStateChangeNoResult();
         });
 
         itmBrowseDatabase.setOnAction(e -> {
@@ -638,7 +640,7 @@ public class App extends Application implements StateChangeListener {
 
         btnFlipBoard.setOnAction(e -> {
             gameModel.setFlipBoard(!gameModel.getFlipBoard());
-            gameModel.triggerStateChange();
+            gameModel.triggerStateChangeNoResult();
         });
 
         btnCopyGame.setOnAction(e -> {
@@ -765,7 +767,7 @@ public class App extends Application implements StateChangeListener {
             }
             if (keyCombinationFlipBoard.match(event)) {
                 gameModel.setFlipBoard(!gameModel.getFlipBoard());
-                gameModel.triggerStateChange();
+                gameModel.triggerStateChangeNoResult();
             }
             if(keyCombinationAnalysis.match(event)) {
                 // enter analysis mode
@@ -866,8 +868,8 @@ public class App extends Application implements StateChangeListener {
             tbMainWindow.setManaged(false);
         }
 
-        gameModel.triggerStateChange();
-
+        gameModel.triggerStateChangeNoResult();
+        
         // un-focus any default button etc.
         spMain.requestFocus();
 
@@ -909,8 +911,6 @@ public class App extends Application implements StateChangeListener {
             cbShowEngineLines.setVisible(true);
             lblShowLines.setVisible(true);
         } else {
-            engineOutputView.enablePVLines();
-            cbShowEngineLines.setSelected(true);
             cbShowEngineLines.setVisible(false);
             lblShowLines.setVisible(false);
         }

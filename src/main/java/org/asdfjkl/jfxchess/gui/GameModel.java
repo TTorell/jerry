@@ -357,6 +357,12 @@ public class GameModel {
         stateChangeListeners.add(toAdd);
     }
 
+    public void triggerStateChangeNoResult() {
+        doNotNotifyAboutResult = true;
+        triggerStateChange();
+        doNotNotifyAboutResult = false;
+    }
+
     public void triggerStateChange() {
         for (StateChangeListener sl : stateChangeListeners)
             sl.stateChange();
@@ -592,10 +598,18 @@ public class GameModel {
         }
     }
 
+    public boolean currentNodeIsRoot() {
+        return (game.getCurrentNode() == game.getRootNode());
+    }
+
+    public boolean currentParentIsRoot() {
+        return (game.getCurrentNode().getParent() == game.getRootNode());
+    }
+
     public boolean eloHasBeenSetInGUI() {
         return eloHasBeenSetInGui;
     }
-    
+
     public void setEloHasBeenSetInGUI(boolean b) {
         eloHasBeenSetInGui = b;
     }

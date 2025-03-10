@@ -48,8 +48,6 @@ public class EngineOutputView implements StateChangeListener {
 
     private boolean isEnabled = true;
     
-    private boolean pvLinesAreEnabled = true;
-
     private TextFlow txtEngineOut;
 
     // This is the index of the first pv-line
@@ -123,19 +121,18 @@ public class EngineOutputView implements StateChangeListener {
 
     public void setText(String info) {
 
+        //pv1.setText(info);
+        // | id (Level MAX) | zobrist  |  nps | hashfull | tbhits | current Move + depth | eval+line pv1 | .. pv2 | ...pv3 | ...pv4 | ... | ...pv64 |
+        // Note: All trailing empty matched strings will not 
+        // be part of infos, so we have to check infos.length().
+        // But there can be empty strings "in between".
+        String[] infos = info.split("\\|");
+
+        if (infos.length > 1 && !infos[1].isEmpty()) {
+            engineId.setText(infos[1]);
+        }
+        
         if(isEnabled) {
-
-            //pv1.setText(info);
-            // | id (Level MAX) | zobrist  |  nps | hashfull | tbhits | current Move + depth | eval+line pv1 | .. pv2 | ...pv3 | ...pv4 | ... | ...pv64 |
-
-            // Note: All trailing empty matched strings will not 
-            // be part of infos, so we have to check infos.length().
-            // But there can be empty strings "in between".
-            String[] infos = info.split("\\|");
-
-            if (infos.length > 1 && !infos[1].isEmpty()) {
-                engineId.setText(infos[1]);
-            }
             if (infos.length > 3 && !infos[3].isEmpty()) {
                 nps.setText(infos[3]);
             }
@@ -147,10 +144,6 @@ public class EngineOutputView implements StateChangeListener {
             }
             if(infos.length > 6 && !infos[6].isEmpty()) {
                 depth.setText(infos[6]);
-            }
-
-            if(!pvLinesAreEnabled) {
-                return;
             }
 
             // Set but don't clear the first pvLine-text.
@@ -169,19 +162,6 @@ public class EngineOutputView implements StateChangeListener {
                 }
             }
         }
-    }
-
-    public void disablePVLines() {
-        if (pvLinesAreEnabled) {
-            resetPVLines();
-            depth.setText("");
-	    nps.setText("");
-        }
-        pvLinesAreEnabled = false;
-    }
-    
-    public void enablePVLines() {
-        pvLinesAreEnabled = true;
     }
 
     private void resetPVLines() {
