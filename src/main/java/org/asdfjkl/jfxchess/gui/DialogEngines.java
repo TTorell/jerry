@@ -49,11 +49,12 @@ public class DialogEngines {
 
     final FileChooser fileChooser = new FileChooser();
 
+    Stage ownerStage;
     Stage stage;
     boolean accepted = false;
 
     ObservableList<Engine> engineList;
-    ListView<Engine> engineListView;
+    EngineListView engineListView;
 
     final Button btnAdd = new Button("Add...");
     final Button btnRemove = new Button("Remove...");
@@ -66,26 +67,30 @@ public class DialogEngines {
     Button btnCancel;
 
     int selectedIndex = 0;
+    
+    public DialogEngines(Stage ownerStage) {
+        this.ownerStage = ownerStage;
+    }
 
     public boolean show(ArrayList<Engine> engines, int idxSelectedEngine, int colorTheme) {
 
         engineList = FXCollections.observableArrayList(engines);
 
-        engineListView = new ListView<>();
-        engineListView.setItems(engineList);
+        engineListView = new EngineListView(engineList);
+        //engineListView.setItems(engineList);
 
-        engineListView.setCellFactory(param -> new ListCell<>() {
-            @Override
-            protected void updateItem(Engine item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.getName() == null) {
-                    setText(null);
-                } else {
-                    setText(item.getName());
-                }
-            }
-        });
+//        engineListView.setCellFactory(param -> new ListCell<>() {
+//            @Override
+//            protected void updateItem(Engine item, boolean empty) {
+//                super.updateItem(item, empty);
+//
+//                if (empty || item == null || item.getName() == null) {
+//                    setText(null);
+//                } else {
+//                    setText(item.getName());
+//                }
+//            }
+//        });
 
         engineListView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Engine>() {
             @Override
@@ -110,6 +115,7 @@ public class DialogEngines {
         });
 
         stage = new Stage();
+        stage.initOwner(ownerStage);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Chess Engines:");
 
