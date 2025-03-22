@@ -18,10 +18,14 @@
 
 package org.asdfjkl.jfxchess.gui;
 
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
@@ -38,9 +42,12 @@ public class EngineListView extends ListView<Engine> {
     private static final Engine PLACEHOLDER = new Engine();
     private Engine draggingItem = null;
     private int originalIndex = -1;
+    
+    private Engine savedSelectedEngine;
 
     public EngineListView(ObservableList<Engine> items) {
         super(items);
+        getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         setCellFactory( lv -> {
             return createListCell();
         });
@@ -66,19 +73,51 @@ public class EngineListView extends ListView<Engine> {
 
         // Set up drag detected event
         cell.setOnDragDetected(event -> {
+            savedSelectedEngine = getSelectionModel().getSelectedItem();
             // only start drag operation if the cell represents one of the
             // movable engines
             if (!cell.isEmpty() && getItems().indexOf(cell.getItem()) > 0) {
                 draggingItem = cell.getItem();
                 Dragboard db = cell.startDragAndDrop(TransferMode.MOVE);
+                System.out.println(event.getSource().getClass());
                 ClipboardContent cc = new ClipboardContent();
                 cc.putString(draggingItem.getName());
                 db.setContent(cc);
-
+    
                 // Create a snapshot of the text and set it as the drag view
                 //Text dragText = new Text(draggingItem.getName());
                 SnapshotParameters params = new SnapshotParameters();
                 WritableImage snapshot = cell.snapshot(params, null);
+
+//                // Experimenting with the dragView image.
+//                // I don't really like the Orange colored dragView.
+//                // But this had other sideeffects.
+//
+//                // Setting an image view 
+//                ImageView imageView = new ImageView(snapshot); 
+//      
+//                // Instantiating the ColorAdjust class 
+//                ColorAdjust colorAdjust = new ColorAdjust(); 
+//      
+//                // Setting the contrast value 
+//                //colorAdjust.setContrast(0.4);     
+//      
+//                // Setting the hue value
+                  // This gave a lightblue drawImage
+//                colorAdjust.setHue(-0.96);    
+//      
+//                // Setting the brightness value 
+//                //colorAdjust.setBrightness(0.9);  
+//     
+//                // Setting the saturation value 
+//                //colorAdjust.setSaturation(0.8);   
+//      
+//
+//                //Applying coloradjust effect to the ImageView node 
+//                imageView.setEffect(colorAdjust);
+//
+//                snapshot = imageView.snapshot(params, snapshot);
+                 
                 db.setDragView(snapshot,30, 0);
 
                 // Insert the placeholder
@@ -87,12 +126,15 @@ public class EngineListView extends ListView<Engine> {
                 event.consume();
             }
         });
+        
+
 
         // Set up drag over event.
         cell.setOnDragOver(event -> {
             // Here we also accept transfer if we are in an empty
-            // cell below the valid engines, but the dragged engine
-            // will end up as last in the list if dropped there.
+            // cell below the valid engines (indexOf == -1), but the 
+            // dragged engine will end up as last in the list if 
+            // dropped there.
             if (getItems().indexOf(cell.getItem()) != 0) {
                 event.acceptTransferModes(TransferMode.MOVE);
             }
@@ -107,7 +149,11 @@ public class EngineListView extends ListView<Engine> {
                     // in case the dragging slipped into the internal
                     // engine and now enters back into the first
                     // moveable engine.
-                    getItems().remove(draggingItem);
+                    if (draggingItem != null) {
+                        getItems().remove(draggingItem);
+                        getSelectionModel().clearSelection();
+                        refresh();
+                    }
                     // Remove old PLACEHOLDER if it exists.
                     getItems().remove(PLACEHOLDER);
                     // Insert PLACEHOLDER in new position.
@@ -120,12 +166,15 @@ public class EngineListView extends ListView<Engine> {
                     getItems().remove(PLACEHOLDER);
                     if (draggingItem != null && !getItems().contains(draggingItem)) {
                         getItems().add(originalIndex, draggingItem);
+                        getSelectionModel().clearSelection();
+                        refresh();
                     }
                 }
                 if (index == -1) {
                     // cell is empty, put PLACEHOLDER at the end of the list.
                     getItems().remove(PLACEHOLDER);
                     getItems().add(PLACEHOLDER);
+                    getSelectionModel().clearSelection();
                 }
             }
             event.consume();
@@ -133,29 +182,47 @@ public class EngineListView extends ListView<Engine> {
 
         // Set up drag dropped event
         cell.setOnDragDropped(event -> {
+            System.out.println("DragDropped");
             Dragboard db = event.getDragboard();
             if (db.hasString()) {
                 int placeholderIndex = getItems().indexOf(PLACEHOLDER);
-
                 if (placeholderIndex != -1) {
                     getItems().set(placeholderIndex, draggingItem);
                     event.setDropCompleted(true);
-                    getSelectionModel().select(placeholderIndex);
                 } else {
                     event.setDropCompleted(false);
                 }
             } else {
                 event.setDropCompleted(false);
             }
+            System.out.println(savedSelectedEngine.getName());
+            System.out.println(getItems().indexOf(savedSelectedEngine));
+            System.out.println(getItems().indexOf(draggingItem));
+            int idx = getItems().indexOf(savedSelectedEngine);
+            System.out.println("index: " + idx);
+            if (idx != -1) {
+                selectIdx(getItems().indexOf(idx));
+            }
             event.consume();
         });
 
         // Set up drag done event.
         cell.setOnDragDone(event -> {
+            System.out.println("DragDone");
             getItems().remove(PLACEHOLDER);
             // Restore the list if draggingItem is missing.
             if (draggingItem != null && !getItems().contains(draggingItem)) {
                 getItems().add(originalIndex, draggingItem);
+            }
+            System.out.println(getItems().indexOf(savedSelectedEngine));
+            System.out.println(getItems().indexOf(draggingItem));
+            int idx = getItems().indexOf(savedSelectedEngine);
+            System.out.println("index: " + idx);
+            if (idx != -1) {
+                this.refresh();
+                getSelectionModel().clearSelection();
+                selectIdx(getItems().indexOf(savedSelectedEngine));
+                this.refresh();
             }
             draggingItem = null;
             originalIndex = -1;
@@ -169,6 +236,7 @@ public class EngineListView extends ListView<Engine> {
             if (draggingItem != null && !getItems().contains(draggingItem)) {
                 getItems().add(originalIndex, draggingItem);
             }
+            //selectEngine(savedSelectedEngine);
             event.consume();
         });
 
@@ -176,9 +244,26 @@ public class EngineListView extends ListView<Engine> {
         setOnDragEntered(event -> {
             // Remove the draggingItem again.
             getItems().remove(draggingItem);
+            //selectEngine(savedSelectedEngine);
             event.consume();
         });
 
         return cell;
+    }
+    
+    public void selectIdx(int idx) {
+        getSelectionModel().clearAndSelect(idx);
+    }
+    
+    //public void selectEngine(Engine engine) {
+    //    getSelectionModel().select(engine);
+    //}
+    
+    public Engine getSelectedEngine() {
+        return getSelectionModel().getSelectedItem();
+    }
+    
+    public void addSelectedItemPropertyListener(ChangeListener<Engine> listener) {
+        getSelectionModel().selectedItemProperty().addListener(listener);
     }
 }

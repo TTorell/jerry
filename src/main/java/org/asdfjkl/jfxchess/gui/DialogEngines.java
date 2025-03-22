@@ -49,7 +49,6 @@ public class DialogEngines {
 
     final FileChooser fileChooser = new FileChooser();
 
-    Stage ownerStage;
     Stage stage;
     boolean accepted = false;
 
@@ -68,31 +67,13 @@ public class DialogEngines {
 
     int selectedIndex = 0;
     
-    public DialogEngines(Stage ownerStage) {
-        this.ownerStage = ownerStage;
-    }
-
     public boolean show(ArrayList<Engine> engines, int idxSelectedEngine, int colorTheme) {
 
         engineList = FXCollections.observableArrayList(engines);
 
         engineListView = new EngineListView(engineList);
-        //engineListView.setItems(engineList);
 
-//        engineListView.setCellFactory(param -> new ListCell<>() {
-//            @Override
-//            protected void updateItem(Engine item, boolean empty) {
-//                super.updateItem(item, empty);
-//
-//                if (empty || item == null || item.getName() == null) {
-//                    setText(null);
-//                } else {
-//                    setText(item.getName());
-//                }
-//            }
-//        });
-
-        engineListView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Engine>() {
+        engineListView.addSelectedItemPropertyListener(new ChangeListener<Engine>() {
             @Override
             public void changed(ObservableValue<? extends Engine> observable, Engine oldValue, Engine newValue) {
 
@@ -115,7 +96,6 @@ public class DialogEngines {
         });
 
         stage = new Stage();
-        stage.initOwner(ownerStage);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Chess Engines:");
 
@@ -181,7 +161,7 @@ public class DialogEngines {
             btnResetParametersClicked();
         });
 
-        engineListView.getSelectionModel().select(idxSelectedEngine);
+        engineListView.selectIdx(idxSelectedEngine);
 
         vbMain.getStyleClass().add(JMetroStyleClass.BACKGROUND);
         Scene scene = new Scene(vbMain);
@@ -213,22 +193,19 @@ public class DialogEngines {
     }
 
     private void btnRemoveEngineClicked() {
-        Engine selectedEngine = engineListView.getSelectionModel().getSelectedItem();
-        engineList.remove(selectedEngine);
-        // Don't know how the size could have got bigger
-        // when we removed an engine, but...
+        engineList.remove(engineListView.getSelectedEngine());
+        // Select internal engine, so we always have a selceted engine.
     }
 
     private void btnResetParametersClicked() {
-
-        Engine selectedEngine = engineListView.getSelectionModel().getSelectedItem();
+        Engine selectedEngine = engineListView.getSelectedEngine();
         for(EngineOption enOpt : selectedEngine.options) {
             enOpt.resetToDefault();
         }
     }
 
     private void btnEditParametersClicked() {
-        Engine selectedEngine = engineListView.getSelectionModel().getSelectedItem();
+        Engine selectedEngine = engineListView.getSelectedEngine();
         DialogEngineOptions dlg = new DialogEngineOptions();
         boolean accepted = dlg.show(selectedEngine.options, colorTheme);
         if(accepted) {
@@ -389,13 +366,13 @@ public class DialogEngines {
                 // Add engine to the engineList and make the list item selected.
                 if (engine.getName() != null && !engine.getName().isEmpty()) {
                     engineList.add(engine);
-                    engineList.sort(engine);
+                    //engineList.sort(engine);
                     int idx = engineList.indexOf(engine);
                     Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
                             engineListView.scrollTo(idx);
-                            engineListView.getSelectionModel().select(idx);
+                            engineListView.selectIdx(idx);
                         }
                     });
                 }
