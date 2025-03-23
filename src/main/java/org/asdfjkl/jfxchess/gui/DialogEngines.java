@@ -194,7 +194,6 @@ public class DialogEngines {
 
     private void btnRemoveEngineClicked() {
         engineList.remove(engineListView.getSelectedEngine());
-        // Select internal engine, so we always have a selceted engine.
     }
 
     private void btnResetParametersClicked() {
