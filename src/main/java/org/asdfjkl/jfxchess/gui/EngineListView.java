@@ -201,7 +201,7 @@ public class EngineListView extends ListView<Engine> {
             int idx = getItems().indexOf(savedSelectedEngine);
             System.out.println("index: " + idx);
             if (idx != -1) {
-                selectIdx(getItems().indexOf(idx));
+                selectIdx(idx);
             }
             event.consume();
         });
